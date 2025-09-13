@@ -3,13 +3,20 @@
 #include <string>
 #include "ASTNode.hpp"
 
+enum PathType
+{
+  Identifier,
+  Self,
+  self
+};
+
 class Path : ASTNode
 {
 private:
-  int flag; // 0: identifier; 1: Self; 2: self
+  PathType type;
   std::string identifier;
 public:
-  Path(int flag, std::string identifier): flag(flag), identifier(identifier){}
+  Path(PathType type, std::string identifier): type(type), identifier(identifier){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

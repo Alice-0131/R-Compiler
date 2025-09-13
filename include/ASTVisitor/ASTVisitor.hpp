@@ -1,6 +1,5 @@
 #ifndef ASTVISITOR_HPP
 #define ASTVISITOR_HPP
-
 class Crate;
 class Path;
 
@@ -16,7 +15,10 @@ class StmtItem;
 class StmtLet;
 class StmtExpr;
 
-class ExprLiteral;
+class ExprLiteralChar;
+class ExprLiteralString;
+class ExprLiteralInt;
+class ExprLiteralBool;
 class ExprPath;
 class ExprBlock;
 class ExprOpUnary;
@@ -67,7 +69,10 @@ public:
   virtual void visit(StmtLet &node) = 0;
   virtual void visit(StmtExpr &node) = 0;
 
-  virtual void visit(ExprLiteral &node) = 0;
+  virtual void visit(ExprLiteralChar &node) = 0;
+  virtual void visit(ExprLiteralString &node) = 0;
+  virtual void visit(ExprLiteralInt &node) = 0;
+  virtual void visit(ExprLiteralBool &node) = 0;
   virtual void visit(ExprPath &node) = 0;
   virtual void visit(ExprBlock &node) = 0;
   virtual void visit(ExprOpUnary &node) = 0;

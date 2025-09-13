@@ -2,8 +2,8 @@
 #include <regex>
 #include <vector>
 #include <stack>
-#include "lexer.hpp"
-#include "token.hpp"
+#include "../../include/Lexer/lexer.hpp"
+#include "../../include/Lexer/token.hpp"
 
 struct lexerRule
 {

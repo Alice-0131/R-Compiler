@@ -1,7 +1,7 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
-
 #include <string>
+#include <iostream>
 
 enum tokenType{
   // Keywords
@@ -74,13 +74,18 @@ enum tokenType{
   // Reserved tokens
   RESERVED_TOKEN,
   // Others
-  WHITESPACE, E_O_F
+  WHITESPACE, E_O_F,
 };
 
 struct Token
 {
   tokenType type;
   std::string str;
+
+  friend std::ostream& operator<<(std::ostream& os, const Token& token) {
+    os << "Type: " << token.type << ", str: " << token.str;
+    return os;
+  }
 };
 
 

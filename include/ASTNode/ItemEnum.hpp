@@ -5,11 +5,11 @@
 class ItemEnum :public ItemNode
 {
 private:
-  std::string identifiers;
+  std::string identifier;
   std::vector<std::string> enum_variants;
 public:
-  ItemEnum(std::string identifiers, std::vector<std::string> &enum_variants):
-    identifiers(identifiers), enum_variants(enum_variants){}
+  ItemEnum(std::string identifier, std::vector<std::string> &enum_variants):
+    identifier(identifier), enum_variants(enum_variants){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

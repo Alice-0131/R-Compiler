@@ -6,9 +6,11 @@ class Path;
 class ExprPath :public ExprWithoutBlockNode
 {
 private:
-  std::vector<std::unique_ptr<Path>> paths;
+  std::unique_ptr<Path> path1;
+  std::unique_ptr<Path> path2;
 public:
-  ExprPath(std::vector<std::unique_ptr<Path>> &&paths): paths(std::move(paths)){}
+  ExprPath(std::unique_ptr<Path> path1, std::unique_ptr<Path> path2): 
+    path1(std::move(path1)), path2(std::move(path2)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

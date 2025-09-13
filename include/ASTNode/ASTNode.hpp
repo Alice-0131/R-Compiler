@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "ASTVisitor.hpp"
+#include "../ASTVisitor/ASTVisitor.hpp"
 
 class ASTNode
 {

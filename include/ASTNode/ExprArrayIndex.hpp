@@ -2,13 +2,13 @@
 #define EXPRARRAYINDEX_HPP
 #include "ExprNode.hpp"
 
-class ExprArray : public ExprWithoutBlockNode
+class ExprArrayNode : public ExprWithoutBlockNode
 {
 public:
   void accept(ASTVisitor &visitor) = 0;
 };
 
-class ExprArrayExpand : public ExprArray
+class ExprArrayExpand : public ExprArrayNode
 {
 private:
   std::vector<std::unique_ptr<ExprNode>> elements;
@@ -18,7 +18,7 @@ public:
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
-class ExprArrayAbbreviate : public ExprArray
+class ExprArrayAbbreviate : public ExprArrayNode
 {
 private:
   std::unique_ptr<ExprNode> value;

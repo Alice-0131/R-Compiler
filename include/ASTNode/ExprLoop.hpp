@@ -3,13 +3,13 @@
 #include "ExprNode.hpp"
 class ExprBlock;
 
-class ExprLoop : public ExprWithBlockNode
+class ExprLoopNode : public ExprWithBlockNode
 {
 public:
   void accept(ASTVisitor &visitor) = 0;
 };
 
-class ExprLoopInfinite : public ExprLoop
+class ExprLoopInfinite : public ExprLoopNode
 {
 private:
   std::unique_ptr<ExprBlock> block;
@@ -18,7 +18,7 @@ public:
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
-class ExprLoopPredicate : public ExprLoop
+class ExprLoopPredicate : public ExprLoopNode
 {
 private:
   std::unique_ptr<ExprNode> condition;

@@ -5,11 +5,12 @@
 class PatternReference : public PatternNode
 {
 private:
+  bool is_and; // true: &; false: &&
   bool is_mut;
   std::unique_ptr<PatternNode> pattern;
 public:
-  PatternReference(bool is_mut, std::unique_ptr<PatternNode> pattern):
-    is_mut(is_mut), pattern(std::move(pattern)){}
+  PatternReference(bool is_and, bool is_mut, std::unique_ptr<PatternNode> pattern):
+    is_and(is_and), is_mut(is_mut), pattern(std::move(pattern)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

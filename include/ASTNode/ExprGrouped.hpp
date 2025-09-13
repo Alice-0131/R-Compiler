@@ -2,7 +2,7 @@
 #define EXPRGROUPED_HPP
 #include "ExprNode.hpp"
 
-class ExprGrouped : ExprWithoutBlockNode
+class ExprGrouped : public ExprWithoutBlockNode
 {
 private:
   std::unique_ptr<ExprNode> expr;
