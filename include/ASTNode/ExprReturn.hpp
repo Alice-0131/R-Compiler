@@ -4,10 +4,10 @@
 
 class ExprReturn : public ExprNode
 {
-private:
-  std::unique_ptr<ExprNode> expr;
 public:
-  ExprReturn(std::unique_ptr<ExprNode> expr): expr(std::move(expr)){}
+  std::shared_ptr<ExprNode> expr;
+
+  ExprReturn(std::shared_ptr<ExprNode> expr): expr(std::move(expr)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

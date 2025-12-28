@@ -4,10 +4,10 @@
 
 class TypePath : public TypeNode
 {
-private:
-  std::unique_ptr<Path> path;
 public:
-  TypePath(std::unique_ptr<Path> path): path(std::move(path)){}
+  std::shared_ptr<Path> path;
+public:
+  TypePath(std::shared_ptr<Path> path): path(std::move(path)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

@@ -11,30 +11,30 @@ public:
 
 class ExprLoopInfinite : public ExprLoopNode
 {
-private:
-  std::unique_ptr<ExprBlock> block;
 public:
-  ExprLoopInfinite(std::unique_ptr<ExprBlock> block): block(std::move(block)){}
+  std::shared_ptr<ExprBlock> block;
+
+  ExprLoopInfinite(std::shared_ptr<ExprBlock> block): block(std::move(block)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
 class ExprLoopPredicate : public ExprLoopNode
 {
-private:
-  std::unique_ptr<ExprNode> condition;
-  std::unique_ptr<ExprBlock> block;
 public:
-  ExprLoopPredicate(std::unique_ptr<ExprNode> condition, std::unique_ptr<ExprBlock> block):
+  std::shared_ptr<ExprNode> condition;
+  std::shared_ptr<ExprBlock> block;
+
+  ExprLoopPredicate(std::shared_ptr<ExprNode> condition, std::shared_ptr<ExprBlock> block):
     condition(std::move(condition)), block(std::move(block)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
 class ExprBreak : public ExprWithoutBlockNode
 {
-private:
-  std::unique_ptr<ExprNode> expr;
 public:
-  ExprBreak(std::unique_ptr<ExprNode> expr): expr(std::move(expr)){}
+  std::shared_ptr<ExprNode> expr;
+
+  ExprBreak(std::shared_ptr<ExprNode> expr): expr(std::move(expr)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

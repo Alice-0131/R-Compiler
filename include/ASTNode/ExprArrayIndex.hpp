@@ -10,32 +10,32 @@ public:
 
 class ExprArrayExpand : public ExprArrayNode
 {
-private:
-  std::vector<std::unique_ptr<ExprNode>> elements;
 public:
-  ExprArrayExpand(std::vector<std::unique_ptr<ExprNode>> &&elements):
+  std::vector<std::shared_ptr<ExprNode>> elements;
+
+  ExprArrayExpand(std::vector<std::shared_ptr<ExprNode>> &&elements):
     elements(std::move(elements)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
 class ExprArrayAbbreviate : public ExprArrayNode
 {
-private:
-  std::unique_ptr<ExprNode> value;
-  std::unique_ptr<ExprNode> size;
 public:
-  ExprArrayAbbreviate(std::unique_ptr<ExprNode> value, std::unique_ptr<ExprNode> size):
+  std::shared_ptr<ExprNode> value;
+  std::shared_ptr<ExprNode> size;
+
+  ExprArrayAbbreviate(std::shared_ptr<ExprNode> value, std::shared_ptr<ExprNode> size):
     value(std::move(value)), size(std::move(size)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
 class ExprIndex : public ExprWithoutBlockNode
 {
-private:
-  std::unique_ptr<ExprNode> array;
-  std::unique_ptr<ExprNode> index;
 public:
-  ExprIndex(std::unique_ptr<ExprNode> array, std::unique_ptr<ExprNode> index):
+  std::shared_ptr<ExprNode> array;
+  std::shared_ptr<ExprNode> index;
+
+  ExprIndex(std::shared_ptr<ExprNode> array, std::shared_ptr<ExprNode> index):
     array(std::move(array)), index(std::move(index)) {}
   void accept(ASTVisitor &visitor)override {visitor.visit(*this);}
 };

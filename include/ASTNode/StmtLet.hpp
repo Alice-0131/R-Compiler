@@ -7,13 +7,13 @@ class ExprNode;
 
 class StmtLet : public StmtNode
 {
-private:
-  std::unique_ptr<PatternNode> pattern;
-  std::unique_ptr<TypeNode> type;
-  std::unique_ptr<ExprNode> expr;
 public:
-  StmtLet(std::unique_ptr<PatternNode> pattern, std::unique_ptr<TypeNode> type,
-    std::unique_ptr<ExprNode> expr): pattern(std::move(pattern)), 
+  std::shared_ptr<PatternNode> pattern;
+  std::shared_ptr<TypeNode> type;
+  std::shared_ptr<ExprNode> expr;
+
+  StmtLet(std::shared_ptr<PatternNode> pattern, std::shared_ptr<TypeNode> type,
+    std::shared_ptr<ExprNode> expr): pattern(std::move(pattern)), 
     type(std::move(type)), expr(std::move(expr)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };

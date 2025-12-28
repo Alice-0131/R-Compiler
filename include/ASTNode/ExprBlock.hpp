@@ -5,11 +5,11 @@ class StmtNode;
 
 class ExprBlock : public ExprWithBlockNode
 {
-private:
-  std::vector<std::unique_ptr<StmtNode>> stmts;
-  std::unique_ptr<ExprWithoutBlockNode> expr;
 public:
-  ExprBlock(std::vector<std::unique_ptr<StmtNode>> &&stmts, std::unique_ptr<ExprWithoutBlockNode> expr):
+  std::vector<std::shared_ptr<StmtNode>> stmts;
+  std::shared_ptr<ExprWithoutBlockNode> expr;
+
+  ExprBlock(std::vector<std::shared_ptr<StmtNode>> &&stmts, std::shared_ptr<ExprWithoutBlockNode> expr):
     stmts(std::move(stmts)), expr(std::move(expr)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };

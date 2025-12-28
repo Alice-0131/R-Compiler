@@ -10,7 +10,7 @@ public:
 
 class ExprLiteralChar : public ExprLiteralNode
 {
-private:
+public:
   char literal;
 public:
   ExprLiteralChar(char literal): literal(literal) {}
@@ -28,8 +28,9 @@ public:
 
 class ExprLiteralInt : public ExprLiteralNode
 {
-private:
-  int literal;
+public:
+  long literal;
+  std::string type;
 public:
   ExprLiteralInt(int literal): literal(literal){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
@@ -37,7 +38,7 @@ public:
 
 class ExprLiteralBool : public ExprLiteralNode
 {
-private:
+public:
   bool literal;
 public:
   ExprLiteralBool(bool literal) : literal(literal) {}

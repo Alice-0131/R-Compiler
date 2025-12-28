@@ -6,18 +6,18 @@ class ExprPath;
 struct StructExprField
 {
   std::string identifier;
-  std::unique_ptr<ExprNode> expr;
+  std::shared_ptr<ExprNode> expr;
 };
 
 
 class ExprStruct : public ExprWithoutBlockNode
 {
-private:
-  std::unique_ptr<ExprPath> path;
-  std::vector<StructExprField> fields;
 public:
-  ExprStruct(std::unique_ptr<ExprPath> path, std::vector<StructExprField> &fields):
-    path(std::move(path)), fields(fields){}
+  std::shared_ptr<ExprPath> path;
+  std::vector<StructExprField> fields;
+
+  ExprStruct(std::shared_ptr<ExprPath> path, std::vector<StructExprField> fields):
+    path(std::move(path)), fields(std::move(fields)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

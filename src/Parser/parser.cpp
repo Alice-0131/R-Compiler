@@ -18,6 +18,9 @@ std::map<tokenType, precedence> nudPrecedence = {
 
 std::map<tokenType, precedence> ledPrecedence = {
   {DOT,        {23, 24}},
+  {L_PAREN,    {22, 22}},
+  {L_BRACE,    {22, 23}},
+  {L_BRACKET,  {22, 23}},
   {AS,         {20, 21}},
   {STAR,       {18, 19}},
   {SLASH,      {18, 19}},
@@ -52,28 +55,28 @@ std::map<tokenType, precedence> ledPrecedence = {
   {BREAK,      {0, 0}}
 };
 
-std::unique_ptr<Crate> Parser::parse() {
-  std::vector<std::unique_ptr<ItemNode>> items;
+std::shared_ptr<Crate> Parser::parse() {
+  std::vector<std::shared_ptr<ItemNode>> items;
   while (pos < tokens.size())
   {
     items.push_back(parseItemNode());
   }
-  return std::make_unique<Crate>(std::move(items));
+  return std::make_shared<Crate>(std::move(items));
 }
 
-std::unique_ptr<Path> Parser::parsePath(){
+std::shared_ptr<Path> Parser::parsePath(){
   if (pos >= tokens.size()) {
     throw std::runtime_error("parsePath: out of range.");
   }
   switch (tokens[pos].type) {
-  case IDENTIFIER: return std::make_unique<Path>(Identifier, tokens[pos++].str);
-  case SELF_:      return std::make_unique<Path>(Self, tokens[pos++].str);
-  case SELF:       return std::make_unique<Path>(self, tokens[pos++].str);
+  case IDENTIFIER: return std::make_shared<Path>(Identifier, tokens[pos++].str);
+  case SELF_:      return std::make_shared<Path>(Self, tokens[pos++].str);
+  case SELF:       return std::make_shared<Path>(self, tokens[pos++].str);
   default: throw std::runtime_error("parsePath: not match.");
   }
 }
 
-std::unique_ptr<ItemNode> Parser::parseItemNode() {
+std::shared_ptr<ItemNode> Parser::parseItemNode() {
   if (pos + 1 >= tokens.size()) {
     throw std::runtime_error("parseItemNode: out of range.");
   }
@@ -97,12 +100,12 @@ std::unique_ptr<ItemNode> Parser::parseItemNode() {
   }
 }
 
-std::unique_ptr<ItemFn> Parser::parseItemFn() {
+std::shared_ptr<ItemFn> Parser::parseItemFn() {
   bool is_const = false;
   std::string identifier;
   FnParameters function_parameters;
-  std::unique_ptr<TypeNode> function_return_type = nullptr;
-  std::unique_ptr<ExprBlock> block_expr = nullptr;
+  std::shared_ptr<TypeNode> function_return_type = nullptr;
+  std::shared_ptr<ExprBlock> block_expr = nullptr;
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseItemFn: out of range.");
   }
@@ -142,7 +145,7 @@ std::unique_ptr<ItemFn> Parser::parseItemFn() {
   } else {
     block_expr = parseExprBlock();
   }
-  return std::make_unique<ItemFn>(is_const, identifier, std::move(function_parameters), 
+  return std::make_shared<ItemFn>(is_const, identifier, std::move(function_parameters), 
     std::move(function_return_type), std::move(block_expr));
 }
 
@@ -173,13 +176,13 @@ bool Parser::parseItemFnSelfParam(SelfParam &self_param){
     if (pos >= tokens.size()) {
       throw std::runtime_error("parseItemParameters: out of range.");
     }
-    if (tokens[pos].type == COLON) {
-      self_param.flag = 2;
-      ++pos;
-      self_param.typed_self.type = parseTypeNode();
-    } else {
-      self_param.flag = 1;
-    }
+    // if (tokens[pos].type == COLON) {
+    //   self_param.flag = 2;
+    //   ++pos;
+    //   self_param.typed_self.type = parseTypeNode();
+    // } else {
+    //   self_param.flag = 1;
+    // }
     if (pos >= tokens.size()) {
       throw std::runtime_error("parseItemParameters: out of range.");
     }
@@ -197,14 +200,14 @@ bool Parser::parseItemFnSelfParam(SelfParam &self_param){
     }
   } else if (tokens[pos].type == AND) {
     ++pos;
-    self_param.flag = 1;
-    self_param.shorthand_self.is_and = true;
+    //self_param.flag = 1;
+    self_param.is_and = true;
     if (pos >= tokens.size()) {
       throw std::runtime_error("parseItemParameters: out of range.");
     }
     if (tokens[pos].type == MUT) {
       ++pos;
-      self_param.shorthand_self.is_mut = true;
+      self_param.is_mut = true;
       if (pos >= tokens.size()) {
         throw std::runtime_error("parseItemParameters: out of range.");
       }
@@ -232,13 +235,13 @@ bool Parser::parseItemFnSelfParam(SelfParam &self_param){
     if (pos >= tokens.size() || tokens[pos++].type != SELF) {
       throw std::runtime_error("parseItemParameters: not match.");
     }
-    if (tokens[pos].type == COLON) {
-      self_param.flag = 2;
-      ++pos;
-      self_param.typed_self.type = parseTypeNode();
-    } else {
-      self_param.flag = 1;
-    }
+    // if (tokens[pos].type == COLON) {
+    //   self_param.flag = 2;
+    //   ++pos;
+    //   self_param.typed_self.type = parseTypeNode();
+    // } else {
+    //   self_param.flag = 1;
+    // }
     if (pos >= tokens.size()) {
       throw std::runtime_error("parseItemParameters: out of range.");
     }
@@ -265,7 +268,7 @@ void Parser::parseItemFnParams(std::vector<FnParam> &fn_params){
     throw std::runtime_error("parseItemParameters: not match.");
   }
   fn_param.type = parseTypeNode();
-  fn_params.push_back(fn_param);
+  fn_params.push_back(std::move(fn_param));
   while (true) {
     if (pos >= tokens.size()) {
       throw std::runtime_error("parseItemParameters: out of range.");
@@ -288,11 +291,11 @@ void Parser::parseItemFnParams(std::vector<FnParam> &fn_params){
       throw std::runtime_error("parseItemParameters: not match.");
     }
     fn_param.type = parseTypeNode();
-    fn_params.push_back(fn_param);
+    fn_params.push_back(std::move(fn_param));
   }
 }
 
-std::unique_ptr<ItemStruct> Parser::parseItemStruct() {
+std::shared_ptr<ItemStruct> Parser::parseItemStruct() {
   std::string identifier;
   std::vector<StructField> struct_fields;
   if (pos >= tokens.size() || tokens[pos++].type != STRUCT) {
@@ -312,7 +315,7 @@ std::unique_ptr<ItemStruct> Parser::parseItemStruct() {
     if (pos >= tokens.size() || tokens[pos++].type != R_BRACE) {
       throw std::runtime_error("parseItemStruct: not match.");
     }
-  case SEMI: return std::make_unique<ItemStruct>(identifier, std::move(struct_fields));
+  case SEMI: return std::make_shared<ItemStruct>(identifier, std::move(struct_fields));
   default:   throw std::runtime_error("parseItemStruct: not match.");
   }
 }
@@ -333,7 +336,7 @@ void Parser::parseItemStructFields(std::vector<StructField> &struct_fields) {
     throw std::runtime_error("parseItemStructFields: not match.");
   }
   struct_field.type = parseTypeNode();
-  struct_fields.push_back(struct_field);
+  struct_fields.push_back(std::move(struct_field));
   while (true) {
     if (pos >= tokens.size()) {
       throw std::runtime_error("parseItemStructFields: out of range.");
@@ -359,11 +362,11 @@ void Parser::parseItemStructFields(std::vector<StructField> &struct_fields) {
       throw std::runtime_error("parseItemStructFields: not match.");
     }
     struct_field.type = parseTypeNode();
-    struct_fields.push_back(struct_field);
+    struct_fields.push_back(std::move(struct_field));
   }
 }
 
-std::unique_ptr<ItemEnum> Parser::parseItemEnum() {
+std::shared_ptr<ItemEnum> Parser::parseItemEnum() {
   std::string identifier;
   std::vector<std::string> enum_variants;
   if (pos >= tokens.size() || tokens[pos++].type != ENUM) {
@@ -381,7 +384,7 @@ std::unique_ptr<ItemEnum> Parser::parseItemEnum() {
   }
   if (tokens[pos].type == R_BRACE) {
     ++pos;
-    return std::make_unique<ItemEnum>(identifier, enum_variants);
+    return std::make_shared<ItemEnum>(identifier, enum_variants);
   }
   if (tokens[pos].type != IDENTIFIER) {
     throw std::runtime_error("parseItemEnum: not match.");
@@ -392,7 +395,7 @@ std::unique_ptr<ItemEnum> Parser::parseItemEnum() {
       throw std::runtime_error("parseItemEnum: out of range.");
     }
     if (tokens[pos].type == R_BRACE) {
-      return std::make_unique<ItemEnum>(identifier, enum_variants);
+      return std::make_shared<ItemEnum>(identifier, enum_variants);
     }
     if (tokens[pos++].type != COMMA) {
       throw std::runtime_error("parseItemEnum: not match.");
@@ -401,7 +404,7 @@ std::unique_ptr<ItemEnum> Parser::parseItemEnum() {
       throw std::runtime_error("parseItemEnum: out of range.");
     }
     if (tokens[pos].type == R_PAREN) {
-      return std::make_unique<ItemEnum>(identifier, enum_variants);
+      return std::make_shared<ItemEnum>(identifier, enum_variants);
     }
     if (tokens[pos].type != IDENTIFIER) {
       throw std::runtime_error("parseItemEnum: not match.");
@@ -411,10 +414,10 @@ std::unique_ptr<ItemEnum> Parser::parseItemEnum() {
   
 }
 
-std::unique_ptr<ItemConst> Parser::parseItemConst() {
+std::shared_ptr<ItemConst> Parser::parseItemConst() {
   std::string identifier;
-  std::unique_ptr<TypeNode> type = nullptr;
-  std::unique_ptr<ExprNode> expr = nullptr;
+  std::shared_ptr<TypeNode> type = nullptr;
+  std::shared_ptr<ExprNode> expr = nullptr;
   if (pos >= tokens.size() || tokens[pos++].type != CONST) {
     throw std::runtime_error("parseItemConst: not match.");
   }
@@ -439,12 +442,12 @@ std::unique_ptr<ItemConst> Parser::parseItemConst() {
   if (tokens[pos++].type != SEMI) {
     throw std::runtime_error("parseItemConst: not match.");
   }
-  return std::make_unique<ItemConst>(identifier, std::move(type), std::move(expr));
+  return std::make_shared<ItemConst>(identifier, std::move(type), std::move(expr));
 }
 
-std::unique_ptr<ItemTrait> Parser::parseItemTrait() {
+std::shared_ptr<ItemTrait> Parser::parseItemTrait() {
   std::string identifier;
-  std::vector<std::unique_ptr<ItemAssociatedNode>> associated_items;
+  std::vector<std::shared_ptr<ItemAssociatedNode>> associated_items;
   if (pos >= tokens.size() || tokens[pos++].type != TRAIT) {
     throw std::runtime_error("parseItemTrait: not match.");
   }
@@ -461,16 +464,16 @@ std::unique_ptr<ItemTrait> Parser::parseItemTrait() {
     }
     if (tokens[pos].type == R_BRACE) {
       ++pos;
-      return std::make_unique<ItemTrait>(identifier, std::move(associated_items));
+      return std::make_shared<ItemTrait>(identifier, std::move(associated_items));
     }
     associated_items.push_back(parseItemAssociatedNode());
   }
 }
 
-std::unique_ptr<ItemImpl> Parser::parseItemImpl() {
+std::shared_ptr<ItemImpl> Parser::parseItemImpl() {
   std::string identifier;
-  std::unique_ptr<TypeNode> type = nullptr;
-  std::vector<std::unique_ptr<ItemAssociatedNode>> associated_items;
+  std::shared_ptr<TypeNode> type = nullptr;
+  std::vector<std::shared_ptr<ItemAssociatedNode>> associated_items;
   if (pos >= tokens.size() || tokens[pos++].type != IMPL) {
     throw std::runtime_error("parseItemImpl: not match.");
   }
@@ -493,13 +496,13 @@ std::unique_ptr<ItemImpl> Parser::parseItemImpl() {
     }
     if (tokens[pos].type == R_BRACE) {
       ++pos;
-      return std::make_unique<ItemImpl>(identifier, std::move(type), std::move(associated_items));
+      return std::make_shared<ItemImpl>(identifier, std::move(type), std::move(associated_items));
     }
     associated_items.push_back(parseItemAssociatedNode());
   }
 }
 
-std::unique_ptr<ItemAssociatedNode> Parser::parseItemAssociatedNode(){
+std::shared_ptr<ItemAssociatedNode> Parser::parseItemAssociatedNode(){
   if (pos >= tokens.size()){
     throw std::runtime_error("parseItemAssociatedNode: out of range.");
   }
@@ -519,7 +522,7 @@ std::unique_ptr<ItemAssociatedNode> Parser::parseItemAssociatedNode(){
   }
 }
 
-std::unique_ptr<StmtNode> Parser::parseStmtNode(){
+std::shared_ptr<StmtNode> Parser::parseStmtNode(){
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseStmtNode: out of range.");
   }
@@ -537,22 +540,22 @@ std::unique_ptr<StmtNode> Parser::parseStmtNode(){
   }
 }
 
-std::unique_ptr<StmtEmpty> Parser::parseStmtEmpty(){
+std::shared_ptr<StmtEmpty> Parser::parseStmtEmpty(){
   if (pos >= tokens.size() || tokens[pos].type != SEMI) {
     throw std::runtime_error("parseStmtEmpty: not match.");
   }
-  return std::make_unique<StmtEmpty>();
+  return std::make_shared<StmtEmpty>();
 }
 
-std::unique_ptr<StmtItem> Parser::parseStmtItem(){
-  std::unique_ptr<ItemNode> item = parseItemNode();
-  return std::make_unique<StmtItem>(std::move(item));
+std::shared_ptr<StmtItem> Parser::parseStmtItem(){
+  std::shared_ptr<ItemNode> item = parseItemNode();
+  return std::make_shared<StmtItem>(std::move(item));
 }
 
-std::unique_ptr<StmtLet> Parser::parseStmtLet(){
-  std::unique_ptr<PatternNode> pattern = nullptr;
-  std::unique_ptr<TypeNode> type = nullptr;
-  std::unique_ptr<ExprNode> expr = nullptr;
+std::shared_ptr<StmtLet> Parser::parseStmtLet(){
+  std::shared_ptr<PatternNode> pattern = nullptr;
+  std::shared_ptr<TypeNode> type = nullptr;
+  std::shared_ptr<ExprNode> expr = nullptr;
   if (pos >= tokens.size() || tokens[pos++].type != LET) {
     throw std::runtime_error("parseStmtLet: not match.");
   }
@@ -574,24 +577,24 @@ std::unique_ptr<StmtLet> Parser::parseStmtLet(){
   if (tokens[pos++].type != SEMI) {
     throw std::runtime_error("parseStmtLet: not match.");
   }
-  return std::make_unique<StmtLet>(std::move(pattern), std::move(type), std::move(expr));
+  return std::make_shared<StmtLet>(std::move(pattern), std::move(type), std::move(expr));
 }
 
-std::unique_ptr<StmtExpr> Parser::parseStmtExpr(){
-  std::unique_ptr<ExprNode> expr = parseExprNode();
+std::shared_ptr<StmtExpr> Parser::parseStmtExpr(){
+  std::shared_ptr<ExprNode> expr = parseExprNode();
   if (pos >= tokens.size() || tokens[pos].type != SEMI) {
     if (dynamic_cast<ExprWithBlockNode*>(expr.get())) {
-      return std::make_unique<StmtExpr>(std::move(expr));
+      return std::make_shared<StmtExpr>(std::move(expr));
     } else {
       throw std::runtime_error("parseStmtExpr: not match.");
     }
   } else {
     ++pos;
-    return std::make_unique<StmtExpr>(std::move(expr));
+    return std::make_shared<StmtExpr>(std::move(expr));
   }
 }
 
-std::unique_ptr<ExprNode> Parser::parseExprNode(int ctxPrecedence){
+std::shared_ptr<ExprNode> Parser::parseExprNode(int ctxPrecedence){
   auto left = parseExprPrefix();
   while (true) {
     if (pos >= tokens.size()) break;
@@ -604,7 +607,7 @@ std::unique_ptr<ExprNode> Parser::parseExprNode(int ctxPrecedence){
   return left;
 }
 
-std::unique_ptr<ExprNode> Parser::parseExprPrefix(){
+std::shared_ptr<ExprNode> Parser::parseExprPrefix(){
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseExprPrefix: out of range.");
   }
@@ -635,12 +638,12 @@ std::unique_ptr<ExprNode> Parser::parseExprPrefix(){
   case CONTINUE:            return parseExprContinue();
   case IF:                  return parseExprIf();
   case RETURN:              return parseExprReturn();
-  case UNDERSCORE:          return parseExprUnderscore();
+  //case UNDERSCORE:          return parseExprUnderscore();
   default: throw std::runtime_error("parseExprPrefix: not match.");
   }
 }
 
-std::unique_ptr<ExprNode> Parser::parseExprInfix(std::unique_ptr<ExprNode> &&left, const Token &token){
+std::shared_ptr<ExprNode> Parser::parseExprInfix(std::shared_ptr<ExprNode> &&left, const Token &token){
   switch (token.type) {
   case PLUS:
   case MINUS:
@@ -675,7 +678,7 @@ std::unique_ptr<ExprNode> Parser::parseExprInfix(std::unique_ptr<ExprNode> &&lef
   case L_BRACKET: return parseExprIndex(std::move(left));
   case L_BRACE: {
     if (dynamic_cast<ExprPath*>(left.get())) {
-      return parseExprStruct(std::unique_ptr<ExprPath>(dynamic_cast<ExprPath*>(left.release())));
+      return parseExprStruct(std::shared_ptr<ExprPath>(dynamic_cast<ExprPath*>(left.get())));
     } else {
       throw std::runtime_error("parseExprInfix: not match.");
     }
@@ -686,7 +689,7 @@ std::unique_ptr<ExprNode> Parser::parseExprInfix(std::unique_ptr<ExprNode> &&lef
   }
 }
 
-std::unique_ptr<ExprLiteralNode> Parser::parseExprLiteralNode(){
+std::shared_ptr<ExprLiteralNode> Parser::parseExprLiteralNode(){
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseExprPrefix: out of range.");
   }
@@ -704,49 +707,51 @@ std::unique_ptr<ExprLiteralNode> Parser::parseExprLiteralNode(){
   }
 }
 
-std::unique_ptr<ExprLiteralChar> Parser::parseExprLiteralChar(){
-  return std::make_unique<ExprLiteralChar>(tokens[pos++].str[0]);
+std::shared_ptr<ExprLiteralChar> Parser::parseExprLiteralChar(){
+  return std::make_shared<ExprLiteralChar>(tokens[pos++].str[0]);
 }
 
-std::unique_ptr<ExprLiteralString> Parser::parseExprLiteralString(){
-  return std::make_unique<ExprLiteralString>(tokens[pos++].str);
+std::shared_ptr<ExprLiteralString> Parser::parseExprLiteralString(){
+  return std::make_shared<ExprLiteralString>(tokens[pos++].str);
 }
 
-std::unique_ptr<ExprLiteralInt> Parser::parseExprLiteralInt(){
-  return std::make_unique<ExprLiteralInt>(std::stoi(tokens[pos++].str));
+std::shared_ptr<ExprLiteralInt> Parser::parseExprLiteralInt(){
+  return std::make_shared<ExprLiteralInt>(std::stoi(tokens[pos++].str));
 }
 
-std::unique_ptr<ExprLiteralBool> Parser::parseExprLiteralBool(){
+std::shared_ptr<ExprLiteralBool> Parser::parseExprLiteralBool(){
   if (tokens[pos++].type == TRUE) {
-    return std::make_unique<ExprLiteralBool>(true);
+    return std::make_shared<ExprLiteralBool>(true);
   } else {
-    return std::make_unique<ExprLiteralBool>(false);
+    return std::make_shared<ExprLiteralBool>(false);
   }
 }
 
-std::unique_ptr<ExprPath> Parser::parseExprPath(){
-  std::unique_ptr<Path> path1 = nullptr;
-  std::unique_ptr<Path> path2 = nullptr;
+std::shared_ptr<ExprPath> Parser::parseExprPath(){
+  std::shared_ptr<Path> path1 = nullptr;
+  std::shared_ptr<Path> path2 = nullptr;
   path1 = parsePath();
   if (pos >= tokens.size() || tokens[pos].type != PATH_SEP) {
-    return std::make_unique<ExprPath>(std::move(path1), std::move(path2));
+    return std::make_shared<ExprPath>(std::move(path1), std::move(path2));
   }
   ++pos;
   path2 = parsePath();
-  return std::make_unique<ExprPath>(std::move(path1), std::move(path2));
+  return std::make_shared<ExprPath>(std::move(path1), std::move(path2));
 }
 
-std::unique_ptr<ExprBlock> Parser::parseExprBlock(){
-  std::vector<std::unique_ptr<StmtNode>> stmts;
-  std::unique_ptr<ExprWithoutBlockNode> expr = nullptr;
-  ++pos;
+std::shared_ptr<ExprBlock> Parser::parseExprBlock(){
+  std::vector<std::shared_ptr<StmtNode>> stmts;
+  std::shared_ptr<ExprWithoutBlockNode> expr = nullptr;
+  if (tokens[pos++].type == R_BRACE) {
+    return std::make_shared<ExprBlock>(std::move(stmts), std::move(expr));
+  }
   while (true) {
     if (pos >= tokens.size()) {
       throw std::runtime_error("parseExprBlock: out of range.");
     }
     if (tokens[pos].type == R_BRACE) {
       ++pos;
-      return std::make_unique<ExprBlock>(std::move(stmts), std::move(expr));
+      return std::make_shared<ExprBlock>(std::move(stmts), std::move(expr));
     }
     int tmp = pos;
     try {
@@ -756,25 +761,18 @@ std::unique_ptr<ExprBlock> Parser::parseExprBlock(){
       break;
     }
   }
-  if (pos >= tokens.size()) {
-    throw std::runtime_error("parseExprBlock: out of range.");
-  }
-  if (tokens[pos].type == R_BRACE) {
-    ++pos;
-    return std::make_unique<ExprBlock>(std::move(stmts), std::move(expr));
-  }
   auto e = parseExprNode();
   if (dynamic_cast<ExprWithoutBlockNode*>(e.get())) {
-    return std::make_unique<ExprBlock>(std::move(stmts), 
-      std::unique_ptr<ExprWithoutBlockNode>(dynamic_cast<ExprWithoutBlockNode*>(e.release())));
+    return std::make_shared<ExprBlock>(std::move(stmts), 
+      std::shared_ptr<ExprWithoutBlockNode>(dynamic_cast<ExprWithoutBlockNode*>(e.get())));
   } else {
     throw std::runtime_error("parseExprBlock: not match.");
   }
 }
 
-std::unique_ptr<ExprOpUnary> Parser::parseExprOpUnary(){
+std::shared_ptr<ExprOpUnary> Parser::parseExprOpUnary(){
   ExprOpUnaryType type;
-  std::unique_ptr<ExprNode> expr;
+  std::shared_ptr<ExprNode> expr;
   switch (tokens[pos].type) {
   case AND:
   case AND_AND:{
@@ -808,12 +806,12 @@ std::unique_ptr<ExprOpUnary> Parser::parseExprOpUnary(){
   default: throw std::runtime_error("parseExprOpUnary: not match.");
   }
   expr = parseExprNode(nudPrecedence[tokens[pos].type].right);
-  return std::make_unique<ExprOpUnary>(type, std::move(expr));
+  return std::make_shared<ExprOpUnary>(type, std::move(expr));
 }
 
-std::unique_ptr<ExprOpBinary> Parser::parseExprOpBinary(std::unique_ptr<ExprNode> &&left, const Token &token){
+std::shared_ptr<ExprOpBinary> Parser::parseExprOpBinary(std::shared_ptr<ExprNode> &&left, const Token &token){
   ExprOpBinaryType type;
-  std::unique_ptr<ExprNode> right;
+  std::shared_ptr<ExprNode> right;
   switch (token.type) {
   case PLUS:       type = PLUS_; break;
   case MINUS:      type = MINUS_; break;
@@ -847,35 +845,35 @@ std::unique_ptr<ExprOpBinary> Parser::parseExprOpBinary(std::unique_ptr<ExprNode
   default: throw std::runtime_error("parseExprOpBinary: not match.");
   }
   right = parseExprNode(ledPrecedence[token.type].right);
-  return std::make_unique<ExprOpBinary>(type, std::move(left), std::move(right));
+  return std::make_shared<ExprOpBinary>(type, std::move(left), std::move(right));
 }
 
-std::unique_ptr<ExprOpCast> Parser::parseExprOpCast(std::unique_ptr<ExprNode> &&left){
-  std::unique_ptr<TypeNode> type = parseTypeNode();
-  return std::make_unique<ExprOpCast>(std::move(left), std::move(type));
+std::shared_ptr<ExprOpCast> Parser::parseExprOpCast(std::shared_ptr<ExprNode> &&left){
+  std::shared_ptr<TypeNode> type = parseTypeNode();
+  return std::make_shared<ExprOpCast>(std::move(left), std::move(type));
 }
 
-std::unique_ptr<ExprGrouped> Parser::parseExprGrouped(){
+std::shared_ptr<ExprGrouped> Parser::parseExprGrouped(){
   ++pos;
-  std::unique_ptr<ExprNode> expr = parseExprNode();
+  std::shared_ptr<ExprNode> expr = parseExprNode();
   if (pos >= tokens.size() || tokens[pos++].type != R_PAREN) {
     throw std::runtime_error("parseExprGrouped: not match.");
   }
-  return std::make_unique<ExprGrouped>(std::move(expr));
+  return std::make_shared<ExprGrouped>(std::move(expr));
 }
 
-std::unique_ptr<ExprArrayNode> Parser::parseExprArrayNode(){
+std::shared_ptr<ExprArrayNode> Parser::parseExprArrayNode(){
   ++pos;
-  std::unique_ptr<ExprNode> expr = parseExprNode();
+  std::shared_ptr<ExprNode> expr = parseExprNode();
   if (pos < tokens.size() && tokens[pos].type == SEMI) {
     ++pos;
-    std::unique_ptr<ExprNode> size = parseExprNode();
+    std::shared_ptr<ExprNode> size = parseExprNode();
     if (pos >= tokens.size() || tokens[pos].type != R_BRACKET) {
       throw std::runtime_error("parseExprArrayNode: not match.");
     }
-    return std::make_unique<ExprArrayAbbreviate>(std::move(expr), std::move(size));
+    return std::make_shared<ExprArrayAbbreviate>(std::move(expr), std::move(size));
   }
-  std::vector<std::unique_ptr<ExprNode>> elements;
+  std::vector<std::shared_ptr<ExprNode>> elements;
   elements.push_back(std::move(expr));
   while (true) {
     if (pos >= tokens.size()) {
@@ -883,7 +881,7 @@ std::unique_ptr<ExprArrayNode> Parser::parseExprArrayNode(){
     }
     if (tokens[pos].type == R_BRACKET) {
       ++pos;
-      return std::make_unique<ExprArrayExpand>(std::move(elements));
+      return std::make_shared<ExprArrayExpand>(std::move(elements));
     }
     if (tokens[pos].type != COMMA) {
       throw std::runtime_error("parseExprArrayNode: not match");
@@ -894,41 +892,41 @@ std::unique_ptr<ExprArrayNode> Parser::parseExprArrayNode(){
     }
     if (tokens[pos].type == R_BRACKET) {
       ++pos;
-      return std::make_unique<ExprArrayExpand>(std::move(elements));
+      return std::make_shared<ExprArrayExpand>(std::move(elements));
     }
-    std::unique_ptr<ExprNode> expr = parseExprNode();
+    std::shared_ptr<ExprNode> expr = parseExprNode();
     elements.push_back(std::move(expr));
   }
 }
 
-std::unique_ptr<ExprIndex> Parser::parseExprIndex(std::unique_ptr<ExprNode> &&left){
-  std::unique_ptr<ExprNode> index = parseExprNode();
+std::shared_ptr<ExprIndex> Parser::parseExprIndex(std::shared_ptr<ExprNode> &&left){
+  std::shared_ptr<ExprNode> index = parseExprNode();
   if (pos >= tokens.size() || tokens[pos].type != R_BRACKET) {
     throw std::runtime_error("parseExprIndex: not match.");
   }
   ++pos;
-  return std::make_unique<ExprIndex>(std::move(left), std::move(index));
+  return std::make_shared<ExprIndex>(std::move(left), std::move(index));
 }
 
-std::unique_ptr<ExprStruct> Parser::parseExprStruct(std::unique_ptr<ExprPath> &&left){
+std::shared_ptr<ExprStruct> Parser::parseExprStruct(std::shared_ptr<ExprPath> &&left){
   std::vector<StructExprField> fields;
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseExprStruct: out of range.");
   }
   if (tokens[pos].type == R_BRACE) {
     ++pos;
-    return std::make_unique<ExprStruct>(std::move(left), fields);
+    return std::make_shared<ExprStruct>(std::move(left), std::move(fields));
   }
   StructExprField field;
   parseExprStructField(field);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
   while (true) {
     if (pos >= tokens.size()) {
       throw std::runtime_error("parseExprStruct: out of range.");
     }
     if (tokens[pos].type == R_BRACE) {
       ++pos;
-      return std::make_unique<ExprStruct>(std::move(left), fields);
+      return std::make_shared<ExprStruct>(std::move(left), std::move(fields));
     }
     if (tokens[pos].type != COMMA) {
       throw std::runtime_error("parseExprStruct: not match.");
@@ -939,11 +937,11 @@ std::unique_ptr<ExprStruct> Parser::parseExprStruct(std::unique_ptr<ExprPath> &&
     }
     if (tokens[pos].type == R_BRACE) {
       ++pos;
-      return std::make_unique<ExprStruct>(std::move(left), fields);
+      return std::make_shared<ExprStruct>(std::move(left), std::move(fields));
     }
     StructExprField field;
     parseExprStructField(field);
-    fields.push_back(field);
+    fields.push_back(std::move(field));
   }
 }
 
@@ -961,13 +959,13 @@ void Parser::parseExprStructField(StructExprField &field){
   }
 }
 
-std::unique_ptr<ExprCall> Parser::parseExprCall(std::unique_ptr<ExprNode> &&left){
-  std::vector<std::unique_ptr<ExprNode>> params;
+std::shared_ptr<ExprCall> Parser::parseExprCall(std::shared_ptr<ExprNode> &&left){
+  std::vector<std::shared_ptr<ExprNode>> params;
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseExprCall: out of range.");
   }
   if (tokens[pos].type == R_PAREN) {
-    return std::make_unique<ExprCall>(std::move(left), std::move(params));
+    return std::make_shared<ExprCall>(std::move(left), std::move(params));
   }
   params.push_back(parseExprNode());
   while (true) {
@@ -975,7 +973,8 @@ std::unique_ptr<ExprCall> Parser::parseExprCall(std::unique_ptr<ExprNode> &&left
       throw std::runtime_error("parseExprCall: out of range.");
     }
     if (tokens[pos].type == R_PAREN) {
-      return std::make_unique<ExprCall>(std::move(left), std::move(params));
+      ++pos;
+      return std::make_shared<ExprCall>(std::move(left), std::move(params));
     }
     if (tokens[pos].type != COMMA) {
       throw std::runtime_error("parseExprCall: not match.");
@@ -985,25 +984,25 @@ std::unique_ptr<ExprCall> Parser::parseExprCall(std::unique_ptr<ExprNode> &&left
   }
 }
 
-std::unique_ptr<ExprNode> Parser::parseExprMethodAndField(std::unique_ptr<ExprNode> &&left){
+std::shared_ptr<ExprNode> Parser::parseExprMethodAndField(std::shared_ptr<ExprNode> &&left){
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseExprMethod: out of range.");
   }
   if (tokens[pos].type == IDENTIFIER) {
     if (pos + 1 >= tokens.size() || tokens[pos + 1].type != L_PAREN) {
-      return std::make_unique<ExprField>(std::move(left), tokens[pos++].str);
+      return std::make_shared<ExprField>(std::move(left), tokens[pos++].str);
     }
   }
-  std::unique_ptr<Path> path = parsePath();
+  std::shared_ptr<Path> path = parsePath();
   if (pos >= tokens.size() || tokens[pos++].type != L_PAREN) {
     throw std::runtime_error("parseExprMethod: not match.");
   }
-  std::vector<std::unique_ptr<ExprNode>> params;
+  std::vector<std::shared_ptr<ExprNode>> params;
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseExprCall: out of range.");
   }
   if (tokens[pos].type == R_PAREN) {
-    return std::make_unique<ExprMethodCall>(std::move(left), std::move(path), std::move(params));
+    return std::make_shared<ExprMethodCall>(std::move(left), std::move(path), std::move(params));
   }
   params.push_back(parseExprNode());
   while (true) {
@@ -1011,7 +1010,7 @@ std::unique_ptr<ExprNode> Parser::parseExprMethodAndField(std::unique_ptr<ExprNo
       throw std::runtime_error("parseExprCall: out of range.");
     }
     if (tokens[pos].type == R_PAREN) {
-      return std::make_unique<ExprMethodCall>(std::move(left), std::move(path), std::move(params));
+      return std::make_shared<ExprMethodCall>(std::move(left), std::move(path), std::move(params));
     }
     if (tokens[pos].type != COMMA) {
       throw std::runtime_error("parseExprCall: not match.");
@@ -1021,14 +1020,14 @@ std::unique_ptr<ExprNode> Parser::parseExprMethodAndField(std::unique_ptr<ExprNo
   }
 }
 
-std::unique_ptr<ExprLoopInfinite> Parser::parseExprLoopInfinite(){
+std::shared_ptr<ExprLoopInfinite> Parser::parseExprLoopInfinite(){
   ++pos;
-  return std::make_unique<ExprLoopInfinite>(parseExprBlock());
+  return std::make_shared<ExprLoopInfinite>(parseExprBlock());
 }
 
-std::unique_ptr<ExprLoopPredicate> Parser::parseExprLoopPredicate(){
-  std::unique_ptr<ExprNode> condition = nullptr;
-  std::unique_ptr<ExprBlock> block = nullptr;
+std::shared_ptr<ExprLoopPredicate> Parser::parseExprLoopPredicate(){
+  std::shared_ptr<ExprNode> condition = nullptr;
+  std::shared_ptr<ExprBlock> block = nullptr;
   ++pos;
   if (pos >= tokens.size() || tokens[pos++].type != L_PAREN) {
     throw std::runtime_error("parseExprLoopPredicate: not match.");
@@ -1043,31 +1042,31 @@ std::unique_ptr<ExprLoopPredicate> Parser::parseExprLoopPredicate(){
     throw std::runtime_error("parseExprLoopPredicate: not match.");
   }
   block = parseExprBlock();
-  return std::make_unique<ExprLoopPredicate>(std::move(condition), std::move(block));
+  return std::make_shared<ExprLoopPredicate>(std::move(condition), std::move(block));
 }
 
-std::unique_ptr<ExprBreak> Parser::parseExprBreak(){
-  std::unique_ptr<ExprNode> expr = nullptr;
+std::shared_ptr<ExprBreak> Parser::parseExprBreak(){
+  std::shared_ptr<ExprNode> expr = nullptr;
   ++pos;
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseExprBreak: out of range.");
   }
   if (tokens[pos].type == SEMI) {
-    return std::make_unique<ExprBreak>(std::move(expr));
+    return std::make_shared<ExprBreak>(std::move(expr));
   }
   expr = parseExprNode();
-  return std::make_unique<ExprBreak>(std::move(expr));
+  return std::make_shared<ExprBreak>(std::move(expr));
 }
 
-std::unique_ptr<ExprContinue> Parser::parseExprContinue(){
+std::shared_ptr<ExprContinue> Parser::parseExprContinue(){
   ++pos;
-  return std::make_unique<ExprContinue>();
+  return std::make_shared<ExprContinue>();
 }
 
-std::unique_ptr<ExprIf> Parser::parseExprIf(){
-  std::unique_ptr<ExprNode> condition = nullptr;
-  std::unique_ptr<ExprBlock> if_block = nullptr;
-  std::unique_ptr<ExprNode> else_block = nullptr;
+std::shared_ptr<ExprIf> Parser::parseExprIf(){
+  std::shared_ptr<ExprNode> condition = nullptr;
+  std::shared_ptr<ExprBlock> if_block = nullptr;
+  std::shared_ptr<ExprNode> else_block = nullptr;
   ++pos;
   if (pos >= tokens.size() || tokens[pos++].type != L_PAREN) {
     throw std::runtime_error("parseExprIf: not match.");
@@ -1098,75 +1097,68 @@ std::unique_ptr<ExprIf> Parser::parseExprIf(){
       throw std::runtime_error("parseExprIf: not match.");
     }
   }
-  return std::make_unique<ExprIf>(std::move(condition), std::move(if_block), std::move(else_block));
+  return std::make_shared<ExprIf>(std::move(condition), std::move(if_block), std::move(else_block));
 }
 
-std::unique_ptr<ExprReturn> Parser::parseExprReturn(){
-  std::unique_ptr<ExprNode> expr = nullptr;
+std::shared_ptr<ExprReturn> Parser::parseExprReturn(){
+  std::shared_ptr<ExprNode> expr = nullptr;
   ++pos;
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseExprReturn: out of range.");
   }
   if (tokens[pos].type == SEMI) {
-    return std::make_unique<ExprReturn>(std::move(expr));
+    return std::make_shared<ExprReturn>(std::move(expr));
   }
   expr = parseExprNode();
-  return std::make_unique<ExprReturn>(std::move(expr));
+  return std::make_shared<ExprReturn>(std::move(expr));
 }
 
-std::unique_ptr<ExprUnderscore> Parser::parseExprUnderscore(){
-  ++pos;
-  return std::make_unique<ExprUnderscore>();
-}
+// std::shared_ptr<ExprUnderscore> Parser::parseExprUnderscore(){
+//   ++pos;
+//   return std::make_shared<ExprUnderscore>();
+// }
 
-std::unique_ptr<PatternNode> Parser::parsePatternNode(){
+std::shared_ptr<PatternNode> Parser::parsePatternNode(){
   if (pos >= tokens.size()) {
     throw std::runtime_error("parsePatternNode: out of range.");
   }
   switch (tokens[pos].type) {
-  case MINUS:
-  case CHAR_LITERAL:
-  case STRING_LITERAL:
-  case RAW_STRING_LITERAL:
-  case CSTRING_LITERAL:
-  case RAW_CSTRING_LITERAL: 
-  case INTEGER_LITERAL: 
-  case TRUE:
-  case FALSE:               return parsePatternLiteral();
+  // case MINUS:
+  // case CHAR_LITERAL:
+  // case STRING_LITERAL:
+  // case RAW_STRING_LITERAL:
+  // case CSTRING_LITERAL:
+  // case RAW_CSTRING_LITERAL: 
+  // case INTEGER_LITERAL: 
+  // case TRUE:
+  // case FALSE:               return parsePatternLiteral();
   case REF:
-  case MUT:                 return parsePatternIdentifier();
-  case IDENTIFIER: {
-    if (pos + 1 < tokens.size() && tokens[pos + 1].type == PATH_SEP) {
-      return parsePatternPath();
-    } else {
-      return parsePatternIdentifier();
-    }
-  }
-  case UNDERSCORE:          return parsePatternWildcard();
+  case MUT:        return parsePatternIdentifier();
+  case IDENTIFIER: return parsePatternIdentifier();
+  //case UNDERSCORE:          return parsePatternWildcard();
   case AND:
-  case AND_AND:             return parsePatternReference();
-  case SELF:
-  case SELF_:               return parsePatternPath();
+  case AND_AND:    return parsePatternReference();
+  // case SELF:
+  // case SELF_:               return parsePatternPath();
   default: throw std::runtime_error("parsePatternNode: not match");
   }
 }
+// std::shared_ptr<PatternLiteral> Parser::parsePatternLiteral(){
+//   bool is_minus = false;
+//   std::shared_ptr<ExprLiteralNode> pattern = nullptr;
+//   if (tokens[pos].type == MINUS) {
+//     is_minus = true;
+//     ++pos;
+//   }
+//   pattern = parseExprLiteralNode();
+//   return std::make_shared<PatternLiteral>(is_minus, std::move(pattern));
+// }
 
-std::unique_ptr<PatternLiteral> Parser::parsePatternLiteral(){
-  bool is_minus = false;
-  std::unique_ptr<ExprLiteralNode> pattern = nullptr;
-  if (tokens[pos].type == MINUS) {
-    is_minus = true;
-    ++pos;
-  }
-  pattern = parseExprLiteralNode();
-  return std::make_unique<PatternLiteral>(is_minus, std::move(pattern));
-}
-
-std::unique_ptr<PatternIdentifier> Parser::parsePatternIdentifier(){
+std::shared_ptr<PatternIdentifier> Parser::parsePatternIdentifier(){
   bool is_ref = false;
   bool is_mut = false;
   std::string identifier;
-  std::unique_ptr<PatternNode> pattern = nullptr;
+  std::shared_ptr<PatternNode> pattern = nullptr;
   if (pos >= tokens.size()) {
     throw std::runtime_error("parsePatternIdentifier: out of range.");
   }
@@ -1185,18 +1177,18 @@ std::unique_ptr<PatternIdentifier> Parser::parsePatternIdentifier(){
     }
   }
   identifier = tokens[pos++].str;
-  return std::make_unique<PatternIdentifier>(is_ref, is_mut, identifier);
+  return std::make_shared<PatternIdentifier>(is_ref, is_mut, identifier);
 }
 
-std::unique_ptr<PatternWildcard> Parser::parsePatternWildcard(){
-  ++pos;
-  return std::make_unique<PatternWildcard>();
-}
+// std::shared_ptr<PatternWildcard> Parser::parsePatternWildcard(){
+//   ++pos;
+//   return std::make_shared<PatternWildcard>();
+// }
 
-std::unique_ptr<PatternReference> Parser::parsePatternReference(){
+std::shared_ptr<PatternReference> Parser::parsePatternReference(){
   bool is_and;
   bool is_mut = false;
-  std::unique_ptr<PatternNode> pattern = nullptr;
+  std::shared_ptr<PatternNode> pattern = nullptr;
   switch (tokens[pos++].type) {
   case AND: is_and = true; break;
   case AND_AND: is_and = false; break;
@@ -1213,15 +1205,15 @@ std::unique_ptr<PatternReference> Parser::parsePatternReference(){
     }
   }
   pattern = parsePatternNode();
-  return std::make_unique<PatternReference>(is_and, is_mut, std::move(pattern));
+  return std::make_shared<PatternReference>(is_and, is_mut, std::move(pattern));
 }
 
-std::unique_ptr<PatternPath> Parser::parsePatternPath(){
-  std::unique_ptr<ExprPath> expr = parseExprPath();
-  return std::make_unique<PatternPath>(std::move(expr));
-}
+// std::shared_ptr<PatternPath> Parser::parsePatternPath(){
+//   std::shared_ptr<ExprPath> expr = parseExprPath();
+//   return std::make_shared<PatternPath>(std::move(expr));
+// }
 
-std::unique_ptr<TypeNode> Parser::parseTypeNode(){
+std::shared_ptr<TypeNode> Parser::parseTypeNode(){
   if (pos >= tokens.size()) {
     throw std::runtime_error("parseTypeNode: out of range.");
   }
@@ -1236,14 +1228,14 @@ std::unique_ptr<TypeNode> Parser::parseTypeNode(){
   }
 }
 
-std::unique_ptr<TypePath> Parser::parseTypePath(){
-  std::unique_ptr<Path> path = parsePath();
-  return std::make_unique<TypePath>(std::move(path));
+std::shared_ptr<TypePath> Parser::parseTypePath(){
+  std::shared_ptr<Path> path = parsePath();
+  return std::make_shared<TypePath>(std::move(path));
 }
 
-std::unique_ptr<TypeReference> Parser::parseTypeReference(){
+std::shared_ptr<TypeReference> Parser::parseTypeReference(){
   bool is_mut = false;
-  std::unique_ptr<TypeNode> type = nullptr;
+  std::shared_ptr<TypeNode> type = nullptr;
   if (pos >= tokens.size() || tokens[pos++].type != AND){
     throw std::runtime_error("parseTypeReference: not match.");
   }
@@ -1258,12 +1250,12 @@ std::unique_ptr<TypeReference> Parser::parseTypeReference(){
     }
   }
   type = parseTypeNode();
-  return std::make_unique<TypeReference>(is_mut, std::move(type));
+  return std::make_shared<TypeReference>(is_mut, std::move(type));
 }
 
-std::unique_ptr<TypeArray> Parser::parseTypeArray(){
-  std::unique_ptr<TypeNode> type = nullptr;
-  std::unique_ptr<ExprNode> expr = nullptr;
+std::shared_ptr<TypeArray> Parser::parseTypeArray(){
+  std::shared_ptr<TypeNode> type = nullptr;
+  std::shared_ptr<ExprNode> expr = nullptr;
   if (pos >= tokens.size() || tokens[pos++].type != L_BRACKET){
     throw std::runtime_error("parseTypeArray: not match.");
   }
@@ -1275,15 +1267,15 @@ std::unique_ptr<TypeArray> Parser::parseTypeArray(){
   if (pos >= tokens.size() || tokens[pos++].type != R_BRACKET){
     throw std::runtime_error("parseTypeArray: not match.");
   }
-  return std::make_unique<TypeArray>(std::move(type), std::move(expr));
+  return std::make_shared<TypeArray>(std::move(type), std::move(expr));
 }
 
-std::unique_ptr<TypeUnit> Parser::parseTypeUnit(){
+std::shared_ptr<TypeUnit> Parser::parseTypeUnit(){
   if (pos >= tokens.size() || tokens[pos++].type != L_PAREN){
     throw std::runtime_error("parseTypeUnit: not match.");
   }
   if (pos >= tokens.size() || tokens[pos++].type != R_PAREN){
     throw std::runtime_error("parseTypeUnit: not match.");
   }
-  return std::make_unique<TypeUnit>();
+  return std::make_shared<TypeUnit>();
 }

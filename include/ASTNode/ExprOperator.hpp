@@ -58,35 +58,35 @@ public:
 
 class ExprOpUnary : public ExprOperatorNode
 {
-private:
-  ExprOpUnaryType type;
-  std::unique_ptr<ExprNode> expr;
 public:
-  ExprOpUnary(ExprOpUnaryType type, std::unique_ptr<ExprNode> expr): 
+  ExprOpUnaryType type;
+  std::shared_ptr<ExprNode> expr;
+
+  ExprOpUnary(ExprOpUnaryType type, std::shared_ptr<ExprNode> expr): 
     type(type), expr(std::move(expr)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
 class ExprOpBinary : public ExprOperatorNode
 {
-private:
-  ExprOpBinaryType type;
-  std::unique_ptr<ExprNode> left;
-  std::unique_ptr<ExprNode> right;
 public:
-  ExprOpBinary(ExprOpBinaryType type, std::unique_ptr<ExprNode> left, 
-    std::unique_ptr<ExprNode> right): type(type), 
+  ExprOpBinaryType type;
+  std::shared_ptr<ExprNode> left;
+  std::shared_ptr<ExprNode> right;
+
+  ExprOpBinary(ExprOpBinaryType type, std::shared_ptr<ExprNode> left, 
+    std::shared_ptr<ExprNode> right): type(type), 
     left(std::move(left)), right(std::move(right)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
 class ExprOpCast : public ExprOperatorNode
 {
-private:
-  std::unique_ptr<ExprNode> expr;
-  std::unique_ptr<TypeNode> type;
 public:
-  ExprOpCast(std::unique_ptr<ExprNode> expr, std::unique_ptr<TypeNode> type):
+  std::shared_ptr<ExprNode> expr;
+  std::shared_ptr<TypeNode> type;
+
+  ExprOpCast(std::shared_ptr<ExprNode> expr, std::shared_ptr<TypeNode> type):
     expr(std::move(expr)), type(std::move(type)){}
   void accept(ASTVisitor &visitor) override{visitor.visit(*this);}
 };

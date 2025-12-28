@@ -8,9 +8,9 @@ class ItemNode;
 class Crate : public ASTNode
 {
 public:
-  std::vector<std::unique_ptr<ItemNode>> children;
+  std::vector<std::shared_ptr<ItemNode>> children;
 
-  Crate(std::vector<std::unique_ptr<ItemNode>> &&children) : children(std::move(children)){}
+  Crate(std::vector<std::shared_ptr<ItemNode>> &&children) : children(std::move(children)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

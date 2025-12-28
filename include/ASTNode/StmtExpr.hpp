@@ -5,10 +5,10 @@ class ExprNode;
 
 class StmtExpr : public StmtNode
 {
-private:
-  std::unique_ptr<ExprNode> expr;
 public:
-  StmtExpr(std::unique_ptr<ExprNode> expr): expr(std::move(expr)){}
+  std::shared_ptr<ExprNode> expr;
+
+  StmtExpr(std::shared_ptr<ExprNode> expr): expr(std::move(expr)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

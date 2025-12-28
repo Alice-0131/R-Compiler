@@ -6,29 +6,16 @@ class PatternNode;
 class ExprNode;
 class ExprBlock;
 
-struct ShorthandSelf
+struct SelfParam
 {
   bool is_and = false;
   bool is_mut = false;
 };
 
-struct TypedSelf
-{
-  bool is_mut = false;
-  std::unique_ptr<TypeNode> type;
-};
-
-struct SelfParam
-{
-  int flag = 0; // 0: none; 1: ShorthandSelf; 2: TypedSelf
-  ShorthandSelf shorthand_self;
-  TypedSelf typed_self;
-};
-
 struct FnParam
 {
-  std::unique_ptr<PatternNode> pattern;
-  std::unique_ptr<TypeNode> type;
+  std::shared_ptr<PatternNode> pattern;
+  std::shared_ptr<TypeNode> type;
 };
 
 struct FnParameters
@@ -39,15 +26,15 @@ struct FnParameters
 
 class ItemFn : public ItemAssociatedNode
 {
-private:
+public:
   bool is_const;
   std::string identifier;
   FnParameters function_parameters;
-  std::unique_ptr<TypeNode> function_return_type;
-  std::unique_ptr<ExprBlock> block_expr;
-public:
+  std::shared_ptr<TypeNode> function_return_type;
+  std::shared_ptr<ExprBlock> block_expr;
+
   ItemFn(bool is_const, std::string identifier, FnParameters &&function_parameters, 
-    std::unique_ptr<TypeNode> function_return_type, std::unique_ptr<ExprBlock> block_expr): 
+    std::shared_ptr<TypeNode> function_return_type, std::shared_ptr<ExprBlock> block_expr): 
     is_const(is_const), identifier(identifier), function_parameters(std::move(function_parameters)), 
     function_return_type(std::move(function_return_type)), block_expr(std::move(block_expr)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}

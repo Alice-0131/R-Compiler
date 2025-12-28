@@ -5,10 +5,10 @@ class ItemNode;
 
 class StmtItem : public StmtNode
 {
-private:
-  std::unique_ptr<ItemNode> item;
 public:
-  StmtItem(std::unique_ptr<ItemNode> item): item(std::move(item)){}
+  std::shared_ptr<ItemNode> item;
+
+  StmtItem(std::shared_ptr<ItemNode> item): item(std::move(item)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

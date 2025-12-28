@@ -1,15 +1,73 @@
 #ifndef ASTNODE_HPP
 #define ASTNODE_HPP
-#include <vector>
-#include <string>
-#include <memory>
 #include "../ASTVisitor/ASTVisitor.hpp"
+#include <memory>
+#include <string>
+#include <vector>
 
-class ASTNode
-{
+class ASTNode {
 public:
-  //virtual void print() const = 0; // debug
+  enum TypeID {
+    K_ASTNode = 0,
+    K_Crate,
+    K_ExprArrayAbbreviate,
+    K_ExprArrayExpand,
+    K_ExprBlock,
+    K_ExprBreak,
+    K_ExprCall,
+    K_ExprContinue,
+    K_ExprField,
+    K_ExprGrouped,
+    K_ExprIf,
+    K_ExprIndex,
+    K_ExprLiteralBool,
+    K_ExprLiteralChar,
+    K_ExprLiteralInt,
+    K_ExprLiteralString,
+    K_ExprLoopInfinite,
+    K_ExprLoopPredicate,
+    K_ExprMethodCall,
+    K_ExprNode,
+    K_ExprOpBinary,
+    K_ExprOpCast,
+    K_ExprOpUnary,
+    K_ExprPath,
+    K_ExprReturn,
+    K_ExprStruct,
+    K_ExprUnderscore,
+    K_ItemConst,
+    K_ItemEnum,
+    K_ItemFn,
+    K_ItemImpl,
+    K_ItemStruct,
+    K_ItemTrait,
+    K_Path,
+    K_PatternIdentifier,
+    K_PatternLiteral,
+    K_PatternPath,
+    K_PatternReference,
+    K_PatternWildcard,
+    K_StmtEmpty,
+    K_StmtExpr,
+    K_StmtItem,
+    K_StmtLet,
+    K_TypeArray,
+    K_TypePath,
+    K_TypeReference,
+    K_TypeUnit,
+  };
+
+private:
+  const TypeID Kind;
+
+public:
+  // virtual void print() const = 0; // debug
+  ASTNode(TypeID Tid = K_ASTNode) : Kind(Tid) {}
+
   virtual void accept(ASTVisitor &visitor) = 0;
+  virtual ~ASTNode() = default;
+
+  TypeID getTypeID() const { return Kind; }
 };
 
 #endif

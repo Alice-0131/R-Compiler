@@ -3,6 +3,7 @@
 class Crate;
 class Path;
 
+class ItemNode;
 class ItemFn;
 class ItemStruct;
 class ItemEnum;
@@ -10,11 +11,13 @@ class ItemConst;
 class ItemTrait;
 class ItemImpl;
 
+class StmtNode;
 class StmtEmpty;
 class StmtItem;
 class StmtLet;
 class StmtExpr;
 
+class ExprNode;
 class ExprLiteralChar;
 class ExprLiteralString;
 class ExprLiteralInt;
@@ -40,12 +43,14 @@ class ExprIf;
 class ExprReturn;
 class ExprUnderscore;
 
+class PatternNode;
 class PatternLiteral;
 class PatternIdentifier;
 class PatternWildcard;
 class PatternReference;
 class PatternPath;
 
+class TypeNode;
 class TypePath;
 class TypeReference;
 class TypeArray;
@@ -92,13 +97,9 @@ public:
   virtual void visit(ExprContinue &node) = 0;
   virtual void visit(ExprIf &node) = 0;
   virtual void visit(ExprReturn &node) = 0;
-  virtual void visit(ExprUnderscore &node) = 0;
 
-  virtual void visit(PatternLiteral &node) = 0;
   virtual void visit(PatternIdentifier &node) = 0;
-  virtual void visit(PatternWildcard &node) = 0;
   virtual void visit(PatternReference &node) = 0;
-  virtual void visit(PatternPath &node) = 0;
 
   virtual void visit(TypePath &node) = 0;
   virtual void visit(TypeReference &node) = 0;

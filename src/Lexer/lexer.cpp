@@ -133,7 +133,7 @@ std::vector<lexerRule> rules = {
 
 void Lexer::removeComments() {
   while (src[pos] == '/'){
-    if (src.length() == pos + 1 || src[pos + 1] != '/' && src[pos + 1] != '*') { // error
+    if (src.length() == pos + 1) { // error
       throw std::runtime_error("lexer: not matched.");
     } else if (src[pos + 1] == '/') {
       for (pos = pos + 2; pos < src.length(); ++pos) {
@@ -160,6 +160,8 @@ void Lexer::removeComments() {
       if (stack.size() != 0) {
         throw std::runtime_error("lexer: not matched.");
       }
+    } else {
+      break;
     }
   }
 }
@@ -185,5 +187,5 @@ std::vector<Token> Lexer::tokenize(){
       throw std::runtime_error("lexer: not matched.");
     }
   }
-  tokens.push_back({E_O_F, ""});
+  return tokens;
 }
