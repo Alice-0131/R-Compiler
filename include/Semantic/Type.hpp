@@ -119,10 +119,8 @@ public:
   }
 
   bool equals(const QualType *Other) const override {
-    if (!Other->isPointer())
-      return false;
-    const PointerQualType *OtherPtr =
-        static_cast<const PointerQualType *>(Other);
+    if (!Other->isPointer()) return false;
+    const PointerQualType *OtherPtr =static_cast<const PointerQualType *>(Other);
     return this->ElemType->equals(OtherPtr->ElemType);
   }
 
@@ -154,6 +152,10 @@ private:
 public:
   FuncQualType(const Signature &Sig, bool isAssoc)
       : QualType(T_func), isAssociated(isAssoc), FuncSig(Sig) {}
+
+  const std::vector<const QualType *> &getParamTypes() const {
+    return FuncSig.first;
+  }
 
   const QualType *getReturnType() const { return FuncSig.second; }
 
@@ -296,6 +298,18 @@ public:
   }
 
   const std::vector<std::string> &getFields() const { return Fields; }
+
+  size_t indexOf(std::string Name) const {
+    int Idx = 0;
+    for (auto& F : Fields) {
+      if (Name == F)
+        return Idx;
+      ++Idx;
+    }
+    return -1;
+  }
+
+  bool contains(std::string Name) const { return indexOf(Name) >= 0; }
 };
 
 class IntLiteralQualType : public QualType {

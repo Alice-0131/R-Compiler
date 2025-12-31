@@ -4,7 +4,7 @@
 
 class PatternReference : public PatternNode
 {
-private:
+public:
   bool is_and; // true: &; false: &&
   bool is_mut;
   std::shared_ptr<PatternNode> pattern;

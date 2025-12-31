@@ -19,7 +19,7 @@ public:
 
 class ExprLiteralString : public ExprLiteralNode
 {
-private:
+public:
   std::string literal;
 public:
   ExprLiteralString(std::string literal) : literal(literal) {}

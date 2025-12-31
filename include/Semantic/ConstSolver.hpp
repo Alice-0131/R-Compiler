@@ -98,6 +98,29 @@ private:
   Result getValue(std::string &name) { return valueMap[name]; }
 
   void setValue(std::string &name, Result result) { valueMap[name] = result; }
+
+public:
+  // return <nullptr, EmptyResult> if no solution
+  ItemSolution takeItemSolution(void) {
+    if (itemSolutions.empty())
+      return std::make_pair(nullptr, Result());
+    else {
+      ItemSolution s = itemSolutions.back();
+      itemSolutions.pop_back();
+      return s;
+    }
+  }
+
+  // return <nullptr, EmptyResult> if no solution
+  ExprSolution takeExprSolution(void) {
+    if (exprSolutions.empty())
+      return std::make_pair(nullptr, Result());
+    else {
+      ExprSolution s = exprSolutions.back();
+      exprSolutions.pop_back();
+      return s;
+    }
+  }
 };
 
 class ConstSolver {
@@ -111,7 +134,7 @@ private:
 
   const QualType *getTy(TypeNode &N) {
     if (N.getTypeID() == ASTNode::K_TypePath) {
-      auto &typePath = static_cast<TypePath &>(N);
+      auto &typePath = *dynamic_cast<TypePath *>(&N);
       return getPathType(typePath);
     }
     return QualType::getVoidType();

@@ -4,6 +4,7 @@
 #include <vector>
 #include "include/Lexer/lexer.hpp"
 #include "include/Parser/parser.hpp"
+#include "include/Semantic/SymbolChecker.hpp"
 
 int main() {
   try {
@@ -21,6 +22,9 @@ int main() {
     auto tokens = lexer.tokenize();
     Parser parser(tokens);
     auto crate = parser.parse();
+    SymTable Syms;
+    Checker Checker(crate, Syms);
+    Checker.check();
   } catch (std::runtime_error err) {
     std::cout << err.what();
     return -1;

@@ -67,6 +67,7 @@ public:
 
 class SymbolTrait: public Symbol
 {
+public:
   std::vector<std::shared_ptr<ItemAssociatedNode>> associated_items;
   SymbolTrait(std::string name, std::vector<std::shared_ptr<ItemAssociatedNode>> &associated_items):
     Symbol(name, TRAIT_), associated_items(associated_items){}

@@ -8,7 +8,7 @@ class StmtItem : public StmtNode
 public:
   std::shared_ptr<ItemNode> item;
 
-  StmtItem(std::shared_ptr<ItemNode> item): item(std::move(item)){}
+  StmtItem(std::shared_ptr<ItemNode> item): StmtNode(K_StmtItem), item(std::move(item)){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

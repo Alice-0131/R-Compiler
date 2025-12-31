@@ -34,7 +34,6 @@ public:
     K_ExprPath,
     K_ExprReturn,
     K_ExprStruct,
-    K_ExprUnderscore,
     K_ItemConst,
     K_ItemEnum,
     K_ItemFn,
@@ -43,10 +42,7 @@ public:
     K_ItemTrait,
     K_Path,
     K_PatternIdentifier,
-    K_PatternLiteral,
-    K_PatternPath,
     K_PatternReference,
-    K_PatternWildcard,
     K_StmtEmpty,
     K_StmtExpr,
     K_StmtItem,
@@ -61,7 +57,6 @@ private:
   const TypeID Kind;
 
 public:
-  // virtual void print() const = 0; // debug
   ASTNode(TypeID Tid = K_ASTNode) : Kind(Tid) {}
 
   virtual void accept(ASTVisitor &visitor) = 0;

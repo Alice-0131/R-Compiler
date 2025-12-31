@@ -5,7 +5,7 @@
 class StmtEmpty : public StmtNode
 {
 public:
-  StmtEmpty(){}
+  StmtEmpty():StmtNode(K_StmtEmpty){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
