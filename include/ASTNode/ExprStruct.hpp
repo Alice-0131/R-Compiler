@@ -17,7 +17,8 @@ public:
   std::vector<StructExprField> fields;
 
   ExprStruct(std::shared_ptr<ExprPath> path, std::vector<StructExprField> fields):
-    path(std::move(path)), fields(std::move(fields)){}
+    path(std::move(path)), fields(std::move(fields)),
+    ExprWithoutBlockNode(K_ExprStruct){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

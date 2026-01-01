@@ -9,7 +9,7 @@ public:
   std::string identifier;
 
   ExprField(std::shared_ptr<ExprNode> expr, std::string identifier): 
-    expr(std::move(expr)), identifier(identifier){}
+    expr(std::move(expr)), identifier(identifier), ExprWithoutBlockNode(K_ExprField){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

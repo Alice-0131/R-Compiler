@@ -2,7 +2,7 @@
 #define EXPRIF_HPP
 #include "ExprNode.hpp"
 
-class ExprIf : public ExprNode
+class ExprIf : public ExprWithoutBlockNode
 {
 public:
   std::shared_ptr<ExprNode> condition;
@@ -11,7 +11,8 @@ public:
 
   ExprIf(std::shared_ptr<ExprNode> condition, std::shared_ptr<ExprBlock> if_block,
     std::shared_ptr<ExprNode> else_block): condition(std::move(condition)),
-    if_block(std::move(if_block)), else_block(std::move(else_block)){}
+    if_block(std::move(if_block)), else_block(std::move(else_block)),
+    ExprWithoutBlockNode(K_ExprIf){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

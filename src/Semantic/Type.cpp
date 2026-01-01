@@ -10,5 +10,19 @@ QualType QualType::I_bool(QualType::T_bool);
 QualType QualType::I_void(QualType::T_void);
 QualType QualType::I_char(QualType::T_char);
 
+std::unordered_map<std::string, StructQualType *> StructQualType::Instances;
+
 std::unordered_map<MutQualType, const PointerQualType *, MutQualTypeHash>
     PointerQualType::Instances;
+
+std::unordered_map<FuncQualType::Signature, const FuncQualType *, FuncQualType::SignatureHash>
+    FuncQualType::Instances;
+
+std::unordered_map<ArrayQualType::ArrayType, const ArrayQualType *, ArrayQualType::ArrayTypeHash>
+    ArrayQualType::Instances;
+
+std::unordered_map<std::string, const EnumQualType *> EnumQualType::Instances;
+
+std::unordered_map<int64_t, IntLiteralQualType *> IntLiteralQualType::Instances;
+
+std::unordered_map<std::string, StringQualType *> StringQualType::Instances;

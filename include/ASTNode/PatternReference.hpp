@@ -10,7 +10,8 @@ public:
   std::shared_ptr<PatternNode> pattern;
 public:
   PatternReference(bool is_and, bool is_mut, std::shared_ptr<PatternNode> pattern):
-    is_and(is_and), is_mut(is_mut), pattern(std::move(pattern)){}
+    is_and(is_and), is_mut(is_mut), pattern(std::move(pattern)), 
+    PatternNode(K_PatternReference){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

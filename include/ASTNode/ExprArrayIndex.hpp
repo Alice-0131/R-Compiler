@@ -5,6 +5,8 @@
 class ExprArrayNode : public ExprWithoutBlockNode
 {
 public:
+  ExprArrayNode(TypeID Tid) : ExprWithoutBlockNode(Tid) {}
+
   void accept(ASTVisitor &visitor) = 0;
 };
 
@@ -14,7 +16,7 @@ public:
   std::vector<std::shared_ptr<ExprNode>> elements;
 
   ExprArrayExpand(std::vector<std::shared_ptr<ExprNode>> &&elements):
-    elements(std::move(elements)){}
+    elements(std::move(elements)), ExprArrayNode(K_ExprArrayExpand){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
@@ -25,7 +27,7 @@ public:
   std::shared_ptr<ExprNode> size;
 
   ExprArrayAbbreviate(std::shared_ptr<ExprNode> value, std::shared_ptr<ExprNode> size):
-    value(std::move(value)), size(std::move(size)){}
+    value(std::move(value)), size(std::move(size)), ExprArrayNode(K_ExprArrayAbbreviate){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
@@ -36,7 +38,7 @@ public:
   std::shared_ptr<ExprNode> index;
 
   ExprIndex(std::shared_ptr<ExprNode> array, std::shared_ptr<ExprNode> index):
-    array(std::move(array)), index(std::move(index)) {}
+    array(std::move(array)), index(std::move(index)), ExprWithoutBlockNode(K_ExprIndex){}
   void accept(ASTVisitor &visitor)override {visitor.visit(*this);}
 };
 

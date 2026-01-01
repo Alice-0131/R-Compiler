@@ -9,7 +9,7 @@ public:
   std::vector<std::string> enum_variants;
 
   ItemEnum(std::string identifier, std::vector<std::string> &enum_variants):
-    identifier(identifier), enum_variants(enum_variants){}
+    identifier(identifier), enum_variants(enum_variants), ItemNode(K_ItemEnum){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

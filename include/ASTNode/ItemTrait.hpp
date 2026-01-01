@@ -9,7 +9,7 @@ public:
   std::vector<std::shared_ptr<ItemAssociatedNode>> associated_items;
 
   ItemTrait(std::string identifier, std::vector<std::shared_ptr<ItemAssociatedNode>> &&associated_items):
-    identifier(identifier), associated_items(std::move(associated_items)){}
+    identifier(identifier), associated_items(std::move(associated_items)), ItemNode(K_ItemTrait){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

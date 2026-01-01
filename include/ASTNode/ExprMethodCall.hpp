@@ -11,7 +11,8 @@ public:
 
   ExprMethodCall(std::shared_ptr<ExprNode> expr, std::shared_ptr<Path> path,
     std::vector<std::shared_ptr<ExprNode>> &&params): expr(std::move(expr)),
-    path(std::move(path)), params(std::move(params)) {}
+    path(std::move(path)), params(std::move(params)),
+    ExprWithoutBlockNode(K_ExprMethodCall) {}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

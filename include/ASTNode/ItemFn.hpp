@@ -46,7 +46,8 @@ public:
   ItemFn(bool is_const, std::string identifier, FnParameters &&function_parameters, 
     std::shared_ptr<TypeNode> function_return_type, std::shared_ptr<ExprBlock> block_expr): 
     is_const(is_const), identifier(identifier), function_parameters(std::move(function_parameters)), 
-    function_return_type(std::move(function_return_type)), block_expr(std::move(block_expr)){}
+    function_return_type(std::move(function_return_type)), block_expr(std::move(block_expr))
+    , ItemAssociatedNode(K_ItemFn){}
 
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 

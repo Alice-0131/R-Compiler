@@ -39,12 +39,14 @@ public:
 class ExprWithoutBlockNode : public ExprNode
 {
 public:
+  ExprWithoutBlockNode(TypeID Tid) :ExprNode(Tid) {}
   virtual void accept(ASTVisitor &visitor) = 0;
 };
 
 class ExprWithBlockNode : public ExprNode
 {
 public:
+  ExprWithBlockNode(TypeID Tid) : ExprNode(Tid) {}
   virtual void accept(ASTVisitor &visitor) = 0;
 };
 

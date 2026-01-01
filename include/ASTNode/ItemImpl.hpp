@@ -12,7 +12,7 @@ public:
 
   ItemImpl(std::string identifier, std::shared_ptr<TypeNode> type,
     std::vector<std::shared_ptr<ItemAssociatedNode>> &&associated_items): identifier(identifier), 
-    type(std::move(type)), associated_items(std::move(associated_items)){}
+    type(std::move(type)), associated_items(std::move(associated_items)), ItemNode(K_ItemImpl){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

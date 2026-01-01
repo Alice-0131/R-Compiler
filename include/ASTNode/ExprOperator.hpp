@@ -50,9 +50,10 @@ enum ExprOpBinaryType
   SHR_EQ_,   // >>=
 };
 
-class ExprOperatorNode : public ExprNode
+class ExprOperatorNode : public ExprWithoutBlockNode
 {
 public:
+  ExprOperatorNode(TypeID Tid) : ExprWithoutBlockNode(Tid) {}
   void accept(ASTVisitor &visitor) = 0;
 };
 
@@ -63,7 +64,7 @@ public:
   std::shared_ptr<ExprNode> expr;
 
   ExprOpUnary(ExprOpUnaryType type, std::shared_ptr<ExprNode> expr): 
-    type(type), expr(std::move(expr)){}
+    type(type), expr(std::move(expr)), ExprOperatorNode(K_ExprOpUnary){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
@@ -76,7 +77,8 @@ public:
 
   ExprOpBinary(ExprOpBinaryType type, std::shared_ptr<ExprNode> left, 
     std::shared_ptr<ExprNode> right): type(type), 
-    left(std::move(left)), right(std::move(right)){}
+    left(std::move(left)), right(std::move(right)),
+    ExprOperatorNode(K_ExprOpBinary){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 
@@ -87,7 +89,7 @@ public:
   std::shared_ptr<TypeNode> type;
 
   ExprOpCast(std::shared_ptr<ExprNode> expr, std::shared_ptr<TypeNode> type):
-    expr(std::move(expr)), type(std::move(type)){}
+    expr(std::move(expr)), type(std::move(type)),ExprOperatorNode(K_ExprOpCast){}
   void accept(ASTVisitor &visitor) override{visitor.visit(*this);}
 };
 

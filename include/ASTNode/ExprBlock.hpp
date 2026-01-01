@@ -10,7 +10,7 @@ public:
   std::shared_ptr<ExprWithoutBlockNode> expr;
 
   ExprBlock(std::vector<std::shared_ptr<StmtNode>> &&stmts, std::shared_ptr<ExprWithoutBlockNode> expr):
-    stmts(std::move(stmts)), expr(std::move(expr)){}
+    stmts(std::move(stmts)), expr(std::move(expr)), ExprWithBlockNode(K_ExprBlock){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

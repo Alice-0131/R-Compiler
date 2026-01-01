@@ -20,7 +20,7 @@ public:
   std::vector<StructField> struct_fields;
 
   ItemStruct(std::string identifier, std::vector<StructField> &&struct_fields): 
-    identifier(identifier), struct_fields(std::move(struct_fields)){}
+    identifier(identifier), struct_fields(std::move(struct_fields)), ItemNode(K_ItemStruct){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 
   void setQualType(const QualType *Ty) {

@@ -9,7 +9,7 @@ public:
   std::shared_ptr<TypeNode> type;
 
   TypeReference(bool is_mut, std::shared_ptr<TypeNode> type):
-    is_mut(is_mut), type(std::move(type)){}
+    is_mut(is_mut), type(std::move(type)), TypeNode(K_TypeReference){}
   void accept(ASTVisitor &visitor) override {visitor.visit(*this);}
 };
 

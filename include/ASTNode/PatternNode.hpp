@@ -5,6 +5,7 @@
 class PatternNode : public ASTNode
 {
 public:
+  PatternNode(TypeID Tid) : ASTNode(Tid) {}
   virtual void accept(ASTVisitor &visitor) = 0;
 };
 
