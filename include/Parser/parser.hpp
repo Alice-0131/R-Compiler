@@ -116,6 +116,8 @@ private:
   std::shared_ptr<TypeReference> parseTypeReference();
   std::shared_ptr<TypeArray> parseTypeArray();
   std::shared_ptr<TypeUnit> parseTypeUnit();
+
+  void reportError(std::string msg);
   
 public:
   Parser(const std::vector<Token>& tokens): tokens(tokens), pos(0){}

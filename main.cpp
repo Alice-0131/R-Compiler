@@ -20,14 +20,19 @@ int main() {
     
     Lexer lexer(src);
     auto tokens = lexer.tokenize();
+
     Parser parser(tokens);
     auto crate = parser.parse();
+
     SymTable Syms;
     Checker Checker(crate, Syms);
     Checker.check();
+    std::cout << "Checker succeeded." << std::endl;
+
   } catch (std::runtime_error err) {
-    std::cout << err.what();
+    std::cerr << "Error: " << err.what() << std::endl;
     return -1;
   }
+  
   return 0;
 }

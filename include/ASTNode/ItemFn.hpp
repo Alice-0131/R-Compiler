@@ -7,23 +7,32 @@ class PatternNode;
 class ExprNode;
 class ExprBlock;
 
-struct SelfParam
-{
+struct ShorthandSelf {
   bool is_and = false;
   bool is_mut = false;
 };
 
-struct FnParam
-{
+struct TypedSelf {
+  bool is_mut = false;
+  std::shared_ptr<TypeNode> type;
+};
+
+struct SelfParam {
+  int flag = 0; // 0: none; 1: ShorthandSelf; 2: TypedSelf
+  ShorthandSelf shorthand_self;
+  TypedSelf typed_self;
+};
+
+struct FnParam {
   std::shared_ptr<PatternNode> pattern;
   std::shared_ptr<TypeNode> type;
 };
 
-struct FnParameters
-{
+struct FnParameters {
   SelfParam self_param;
   std::vector<FnParam> fn_params;
 };
+
 
 struct VarDecl {
   std::string Name;

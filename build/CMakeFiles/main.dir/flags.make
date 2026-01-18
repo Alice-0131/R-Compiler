@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/xjq/code/Compiler/R-Compiler/include
+CXX_INCLUDES = -I/usr/lib/llvm-14/include -I/home/xjq/code/Compiler/R-Compiler/include
 
-CXX_FLAGS = -g
+CXX_FLAGS = -g   -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 

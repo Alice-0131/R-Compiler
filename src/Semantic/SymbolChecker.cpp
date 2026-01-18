@@ -287,10 +287,18 @@ const FuncQualType *Checker::setFnSignature(ItemFn &N, bool isImpl) {
   std::vector<const QualType *> paramTy;
   auto &self = N.function_parameters.self_param;
   // push self type as the first paramter type
-  const QualType *SelfTy =
-        self.is_and ? PointerQualType::create(self.is_mut, CurImplTy)
+  if (self.flag == 1) {
+    // ShorthandSelf
+    const QualType *SelfTy =
+        self.shorthand_self.is_and
+            ? PointerQualType::create(self.shorthand_self.is_mut, CurImplTy)
             : CurImplTy;
     paramTy.push_back(SelfTy);
+  } else if (self.flag == 2) {
+    // TypedSelf
+    throw std::runtime_error("TypedSelf in function parameter unsupported.");
+  }
+
   for (auto &param : N.function_parameters.fn_params) {
     // FIXME: should consider pattern (ref & mut)
     const QualType *Ty = getType(*param.type);
@@ -409,6 +417,7 @@ void Checker::checkItemNode(ItemNode &N) {
 }
 
 const QualType *Checker::checkExprNode(ExprNode &N) {
+
   switch (N.getTypeID()) {
   default:
     throw std::runtime_error("unexpected expr node.");
@@ -514,16 +523,16 @@ const QualType *Checker::checkPath(Path &N) {
 }
 
 void Checker::checkItemFn(ItemFn &N) {
+
   CurFunction = &N;
   islocal = true;
   scopes = new LocalScope;
-  if (CurImplTy == nullptr) {
-    throw std::runtime_error("function outside impl unsupported.");
+  if (CurImplTy) {
+    bool mut = N.function_parameters.self_param.shorthand_self.is_mut;
+    bool ref = N.function_parameters.self_param.shorthand_self.is_and;
+    const QualType *ArgTy = ref ? PointerQualType::create(mut, CurImplTy) : CurImplTy;
+    CurFunction->createVarDecl("self", ArgTy, ref ? false : mut);
   }
-  bool mut = N.function_parameters.self_param.is_mut;
-  bool ref = N.function_parameters.self_param.is_and;
-  const QualType *ArgTy = ref ? PointerQualType::create(mut, CurImplTy) : CurImplTy;
-  CurFunction->createVarDecl("self", ArgTy, ref ? false : mut);
 
   for (const FnParam &I : N.function_parameters.fn_params) {
     const QualType *ArgTy = getType(*I.type);
@@ -598,6 +607,7 @@ void Checker::checkStmtEmpty(StmtEmpty &N) {}
 void Checker::checkStmtItem(StmtItem &N) { checkItemNode(*N.item); }
 
 void Checker::checkStmtLet(StmtLet &N) {
+
   PatternIdentifier *PI = dynamic_cast<PatternIdentifier*>(N.pattern.get());
   if (!PI) {
     throw std::runtime_error("invalid variable name of let statement.");
@@ -605,8 +615,13 @@ void Checker::checkStmtLet(StmtLet &N) {
 
   const QualType *LTy = checkTypeNode(*N.type);
   const QualType *RTy = checkExprNode(*N.expr);
-  if (!LTy->equals(RTy)) {
-    throw std::runtime_error("the type of let statement is not match.");
+  if (LTy && RTy) {
+      bool eq = LTy->equals(RTy);
+      if (!eq) {
+        throw std::runtime_error("the type of let statement is not match.");
+      }
+  } else {
+      throw std::runtime_error("Null type in let statement");
   }
 
   if (RTy->isPointer()) {
@@ -890,6 +905,7 @@ const QualType *Checker::checkExprGrouped(ExprGrouped &N) {
 }
 
 const QualType *Checker::checkExprArrayExpand(ExprArrayExpand &N) {
+
   size_t Length = N.elements.size();
   if (Length <= 0) {
     throw std::runtime_error("Wrong array expand.");
@@ -902,8 +918,9 @@ const QualType *Checker::checkExprArrayExpand(ExprArrayExpand &N) {
       throw std::runtime_error("the type of array expand is not match.");
     }
   }
-
-  return N.setQualType(ArrayQualType::create(Types[0], Length));
+  
+  auto AT = ArrayQualType::create(Types[0], Length);
+  return N.setQualType(AT);
 }
 
 long Checker::evaluateExprNode(ExprNode &N) {
@@ -1227,7 +1244,7 @@ const QualType *Checker::getPathType(TypePath &N) {
   const QualType *Ty;
   switch (N.path->type) {
   case PathType::Identifier: {
-    const QualType *Ty = nullptr;
+    Ty = nullptr;
     const std::string &name = N.path->identifier;
     if (name == "bool")  Ty =  QualType::getBoolType();
     if (name == "i32")   Ty =  QualType::getI32Type();

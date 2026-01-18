@@ -212,8 +212,8 @@ public:
   bool equals(const QualType *Other) const override {
     if (!Other->isArray()) return false;
     const ArrayQualType *OtherArr = static_cast<const ArrayQualType *>(Other);
-    return this->Ty.second == OtherArr->Ty.second &&
-           this->Ty.first->equals(OtherArr->Ty.first);
+    if (this->Ty.second != OtherArr->Ty.second) return false;
+    return this->Ty.first->equals(OtherArr->Ty.first);
   }
 };
 
