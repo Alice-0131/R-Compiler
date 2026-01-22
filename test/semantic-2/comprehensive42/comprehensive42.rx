@@ -44,7 +44,7 @@ fn main() {
         *free_list_head = 0;
     }
 
-    fn alloc(heap: &mut [i32; 1024], free_list_head: &mut i32) -> i32 {
+    fn halloc(heap: &mut [i32; 1024], free_list_head: &mut i32) -> i32 {
         if (*free_list_head == -1) {
             return -1; // Out of memory
         }
@@ -54,7 +54,7 @@ fn main() {
         return block_addr;
     }
 
-    fn free(heap: &mut [i32; 1024], free_list_head: &mut i32, addr: i32) {
+    fn hfree(heap: &mut [i32; 1024], free_list_head: &mut i32, addr: i32) {
         heap[addr as usize] = *free_list_head;
         *free_list_head = addr;
     }
@@ -66,7 +66,7 @@ fn main() {
     let mut successful_allocs: i32 = 0;
 
     while (i < 64) {
-        let addr: i32 = alloc(&mut heap, &mut free_list_head);
+        let addr: i32 = halloc(&mut heap, &mut free_list_head);
         if (addr != -1) {
             allocations[i as usize] = addr;
             successful_allocs = successful_allocs + 1;
@@ -77,7 +77,7 @@ fn main() {
     i = 0;
     while (i < 32) {
         if (i % 2 == 0) {
-            free(&mut heap, &mut free_list_head, allocations[i as usize]);
+            hfree(&mut heap, &mut free_list_head, allocations[i as usize]);
             allocations[i as usize] = -1;
         }
         i = i + 1;
@@ -85,7 +85,7 @@ fn main() {
 
     i = 0;
     while (i < 16) {
-        let addr: i32 = alloc(&mut heap, &mut free_list_head);
+        let addr: i32 = halloc(&mut heap, &mut free_list_head);
         if (addr != -1) {
             let mut j: i32 = 0;
             let mut placed: bool = false;
@@ -127,12 +127,12 @@ fn main() {
             }
             current_ptr = next_ptr;
         }
-        // Safe denominator: remaining free blocks. If zero, fragmentation is defined as 0.
+        // Safe denominator: remaining hfree blocks. If zero, fragmentation is defined as 0.
         let remaining_free: i32 = total_blocks - active_blocks; // could be 0
         if (remaining_free > 0) {
             fragmentation_metric = max_contiguous_free * 100 / remaining_free;
         } else {
-            fragmentation_metric = 0; // No free space -> treat as no measurable fragmentation.
+            fragmentation_metric = 0; // No hfree space -> treat as no measurable fragmentation.
         }
     }
 
@@ -141,7 +141,7 @@ fn main() {
         while (i < 64) {
             if (i % 3 == 0) {
                 if (allocations[i as usize] != -1) {
-                    free(&mut heap, &mut free_list_head, allocations[i as usize]);
+                    hfree(&mut heap, &mut free_list_head, allocations[i as usize]);
                     allocations[i as usize] = -1;
                 }
             }

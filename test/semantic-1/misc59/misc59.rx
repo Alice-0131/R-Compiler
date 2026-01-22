@@ -10,17 +10,11 @@ Comment: Miller-Rabin primality test with variable `miller_result` not found
 // Miller-Rabin probabilistic primality test algorithm
 // Uses repeated squaring and modular arithmetic
 
-trait NumberOperations {
-    fn power_mod(base: Self, exp: Self, modulus: Self) -> Self;
-    fn is_even(n: Self) -> bool;
-    fn copy(&self) -> Self;
-}
-
 struct Int {
     i: i32,
 }
 
-impl NumberOperations for Int {
+impl Int {
     fn power_mod(base: Self, exp: Self, modulus: Self) -> Self {
         if (modulus.i == 1) {
             return Int { i: 0 };

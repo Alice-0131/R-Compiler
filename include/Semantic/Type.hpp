@@ -249,6 +249,19 @@ public:
     return nullptr; //字段不存在
   }
 
+  const QualType *getFieldType(unsigned Index) const {
+    if (Index >= Fields.size()) throw std::runtime_error("Field index out of bounds");
+    return Fields[Index].Type;
+  }
+
+  std::size_t getFieldIndex(std::string Name) const {
+    for (std::size_t Idx = 0; Idx < Fields.size(); ++Idx) {
+      if (Fields[Idx].Name == Name)
+        return Idx;
+    }
+    return -1;
+  }
+
   const std::unordered_map<std::string, const FuncQualType *> &getMethods() const {return Methods;}
 
   const FuncQualType *getMethodSig(std::string fnName) const {

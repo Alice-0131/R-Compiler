@@ -1,0 +1,41 @@
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
+
+# 编辑器/IDE 生成的文件和目录
+.vscode/
+.idea/
+*.swp
+*~
+
+# 依赖管理目录
+node_modules/
+vendor/
+
+# 编译输出目录
+dist/
+build/
+out/
+
+# 日志文件
+*.log
+
+# 环境变量文件
+.env
+
+# 临时文件
+tmp/
+temp/
+
+# 缓存
+*.pyc
+__pycache__/
+
+# 代码格式化插件配置文件
+.clang-format
+setup.cfg
+
+.cache/
+*.ll
+*.s
+*.o

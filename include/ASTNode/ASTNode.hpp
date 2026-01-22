@@ -51,10 +51,6 @@ public:
     K_TypePath,
     K_TypeReference,
     K_TypeUnit,
-    K_ExprUnderscore,
-    K_PatternLiteral,
-    K_PatternWildcard,
-    K_PatternPath,
   };
 
 private:

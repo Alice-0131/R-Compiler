@@ -9,6 +9,10 @@ template <class K, class V>
 class TableImpl{
 public:
   std::unordered_map<K, V> Table;
+
+  const std::unordered_map<K, V> &getTable() const {
+    return Table;
+  }
 };
 
 class StructTable : public TableImpl<std::string, StructQualType *> {

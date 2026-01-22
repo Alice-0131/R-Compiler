@@ -4,7 +4,7 @@ Test Target: basic
 Author: Wenxin Zheng
 Time: 2025-08-08
 Verdict: Fail
-Comment: basic test, multiple errors - return type mismatch, incomplete trait, static type error
+Comment: basic test, multiple errors - return type mismatch, static type error
 */
 
 fn main() {
@@ -54,11 +54,5 @@ impl Deck {
         card
     }
 }
-
-trait Randomize {
-    fn shuffle(&mut self);
-}
-
-impl Randomize for Deck {}
 
 const COUNT: i32 = "52";

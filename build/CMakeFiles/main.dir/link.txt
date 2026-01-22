@@ -1,1 +1,0 @@
-/usr/bin/c++ -g CMakeFiles/main.dir/main.cpp.o CMakeFiles/main.dir/src/Lexer/lexer.cpp.o CMakeFiles/main.dir/src/Parser/parser.cpp.o CMakeFiles/main.dir/src/Semantic/SymbolChecker.cpp.o CMakeFiles/main.dir/src/Semantic/SymbolCollector.cpp.o CMakeFiles/main.dir/src/Semantic/Type.cpp.o -o main 
