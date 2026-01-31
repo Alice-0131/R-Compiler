@@ -71,8 +71,7 @@ void Checker::initRun() {
   for (auto &item : Prog->children) {
     if (item->getTypeID() != ASTNode::K_ItemFn) continue;
     ItemFn &itemFn = dynamic_cast<ItemFn &>(*item);
-    if (itemFn.block_expr == nullptr)
-      continue;
+    if (itemFn.block_expr == nullptr) continue;
     auto &stmts = itemFn.block_expr->stmts;
     auto it = stmts.begin();
     while (it != stmts.end()) {
@@ -106,11 +105,9 @@ void Checker::initRun() {
 
 void Checker::firstRun() {
   std::unordered_set<ItemNode *> remove;
-  // used to merge all impls for a specific struct to one
-  std::unordered_map<std::string, ItemImpl *> inhImplInfo;
-  // used to merge all impls for a specific struct & trait to one
+  std::unordered_map<std::string, ItemImpl *> inhImplInfo;// used to merge all impls for a specific struct to one
   std::unordered_map<std::pair<std::string, std::string>, ItemImpl *, PairHash>
-      traitImplInfo;
+      traitImplInfo;// used to merge all impls for a specific struct & trait to one
   // visit all items in crate
   for (auto &item : Prog->children) {
     switch (item->getTypeID()) {
@@ -151,10 +148,7 @@ void Checker::firstRun() {
       auto &typePath = dynamic_cast<TypePath &>(*itemImpl.type);
       std::string typeName = typePath.getTypeName();
       ItemImpl *&whichImpl =
-          traitName.empty()
-              ? inhImplInfo[typeName]
-              : traitImplInfo[std::make_pair(traitName, typeName)];
-
+          traitName.empty() ? inhImplInfo[typeName] : traitImplInfo[std::make_pair(traitName, typeName)];
       if (whichImpl == nullptr) {
         whichImpl = &itemImpl;
       } else {
@@ -246,7 +240,7 @@ void Checker::forthRun(void) {
     std::string &traitName = itemImpl.identifier;
     auto &typePath = dynamic_cast<TypePath &>(*itemImpl.type);
     std::string typeName = typePath.getTypeName();
-    if (!traitName.empty()) {
+    if (!traitName.empty()) { // trait impl
       // trait impl for struct
       if (!Syms.traitTable.count(traitName)) {
         throw std::runtime_error("implement undefined trait for struct.");
@@ -263,8 +257,9 @@ void Checker::forthRun(void) {
     if (ImplInfo.count(typeName)) {
       auto &itemList = ImplInfo[typeName]->associated_items;
       auto &traitImplItem = itemImpl.associated_items;
-      for (int i = 0; i < traitImplItem.size(); ++i)
-        itemList.push_back(std::move(traitImplItem[i]));
+      for (int i = 0; i < traitImplItem.size(); ++i) {
+        itemList.push_back(traitImplItem[i]);
+      }
       remove.insert(&itemImpl);
     } else {
       ImplInfo[typeName] = &itemImpl;
@@ -281,9 +276,8 @@ void Checker::fifthRun(void) {
 }
 
 const FuncQualType *Checker::setFnSignature(ItemFn &N, bool isImpl) {
-  const QualType *retTy = N.function_return_type
-                              ? getType(*N.function_return_type)
-                              : QualType::getVoidType();
+  const QualType *retTy = N.function_return_type 
+    ? getType(*N.function_return_type) : QualType::getVoidType();
   std::vector<const QualType *> paramTy;
   auto &self = N.function_parameters.self_param;
   // push self type as the first paramter type
@@ -336,7 +330,6 @@ void Checker::collectStructMethod(ItemImpl &N) {
   }
   for (auto &item : N.associated_items) {
     if (item->getTypeID() != ASTNode::K_ItemFn) {
-      // FIXME: actually, item can be ItemConst, but we do not care.
       throw std::runtime_error("Invalid.");
     }
     auto &itemFn = dynamic_cast<ItemFn&>(*item);
@@ -355,7 +348,6 @@ void Checker::collectTraitMethod(ItemTrait &N) {
   }
   for (auto &item : N.associated_items) {
     if (item->getTypeID() != ASTNode::K_ItemFn) {
-      // FIXME: actually, item can be ItemConst, but we do not care.
       throw std::runtime_error("Invalid.");
     }
     auto &itemFn = dynamic_cast<ItemFn&>(*item);
@@ -660,9 +652,7 @@ const QualType *Checker::checkExprLiteralChar(ExprLiteralChar &N) {
 }
 
 const QualType *Checker::checkExprLiteralString(ExprLiteralString &N) {
-  // FIXME: is it correct to force string literal to a pointer?
-  return N.setQualType(
-      PointerQualType::create(false, StringQualType::create(N.literal)));
+  return N.setQualType(PointerQualType::create(false, StringQualType::create(N.literal)));
 }
 
 const QualType *Checker::checkExprLiteralInt(ExprLiteralInt &N) {
@@ -855,7 +845,7 @@ const QualType *Checker::checkExprOpBinary(ExprOpBinary &N) {
   case XOR_:                   // ^
   case SHL_:                   // <<
   case SHR_:                   // >>
-    return N.setQualType(LTy); // TODO: may check more details.
+    return N.setQualType(LTy); 
   case EQUAL_:                 // ==
   case NOT_EQUAL_:             // !=
   case GREATER_:               // >

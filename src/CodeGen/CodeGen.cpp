@@ -45,17 +45,18 @@ void CodeGen::emitCrate(const Crate &N) {
 
 void CodeGen::emitStructDefination() {
   std::queue<std::pair<std::string, StructQualType *>> q;
-  for (auto It : Syms.structTable.getTable())
+  for (auto It : Syms.structTable.getTable()) {
     q.push(It);
+  }
 
-  for (unsigned Round = 0; Round < 5; Round++) {
+  for (unsigned i = 0; i < 5; i++) {
     int len = q.size();
     for (int i = 0; i < len; i++) {
       auto [Name, Ty] = q.front();
       q.pop();
 
       bool canCreate = true;
-      llvm::SmallVector<llvm::Type *, 4> Types;
+      std::vector<llvm::Type*> Types;
       for (auto &F : Ty->getFields()) {
         llvm::Type *FieldTy = convertType(F.Type);
         if (!FieldTy) {
@@ -64,10 +65,11 @@ void CodeGen::emitStructDefination() {
         }
         Types.emplace_back(FieldTy);
       }
-      if (canCreate)
+      if (canCreate) {
         StructTyDef[Name] = llvm::StructType::create(Context, Types, Name);
-      else
+      } else {
         q.push({Name, Ty});
+      }
     }
   }
   assert(q.empty() && "failed to create struct defination");
@@ -86,48 +88,65 @@ std::string CodeGen::extractManglePathIdentifier(const ExprPath &N) {
 }
 
 void CodeGen::emitFunctionDefination() {
-  auto createFn = [&](std::string Name, const FuncQualType *Fn) {
+  for (auto [Name, FnTy] : Syms.fnTable.getTable()) {
     std::vector<llvm::Type *> ParamTypes;
-    for (auto Ty : Fn->getParamTypes())
+    for (auto Ty : FnTy->getParamTypes()) {
       ParamTypes.push_back(convertType(Ty));
+    }
 
     llvm::Type *RetType;
-    if (Fn->getReturnType()->isStruct() || Fn->getReturnType()->isArray()) {
+    if (FnTy->getReturnType()->isStruct() || FnTy->getReturnType()->isArray()) {
       RetType = llvm::Type::getVoidTy(Context);
       ParamTypes.push_back(llvm::PointerType::get(Context, 0));
     } else {
-      RetType = convertType(Fn->getReturnType());
+      RetType = convertType(FnTy->getReturnType());
     }
-    llvm::FunctionType *FnTy = llvm::FunctionType::get(RetType, ParamTypes, false);
-    llvm::Function::Create(FnTy, llvm::Function::ExternalLinkage, Name, Module);
-  };
+    
+    llvm::FunctionType *FTy = llvm::FunctionType::get(RetType, ParamTypes, false);
+    llvm::Function::Create(FTy, llvm::Function::ExternalLinkage, Name, Module);
+  }
 
-  for (auto [Name, FnTy] : Syms.fnTable.getTable())
-    createFn(Name, FnTy);
 
   for (auto It : Syms.structTable.getTable()) {
     std::string SName = It.first;
     for (auto [Name, FnTy] : It.second->getMethods()) {
       std::string MangledName = mangleFnName(SName, Name);
-      createFn(MangledName, FnTy);
+      
+      std::vector<llvm::Type *> ParamTypes;
+      for (auto Ty : FnTy->getParamTypes())
+        ParamTypes.push_back(convertType(Ty));
+
+      llvm::Type *RetType;
+      if (FnTy->getReturnType()->isStruct() || FnTy->getReturnType()->isArray()) {
+        RetType = llvm::Type::getVoidTy(Context);
+        ParamTypes.push_back(llvm::PointerType::get(Context, 0));
+      } else {
+        RetType = convertType(FnTy->getReturnType());
+      }
+      
+      llvm::FunctionType *FTy = llvm::FunctionType::get(RetType, ParamTypes, false);
+      llvm::Function::Create(FTy, llvm::Function::ExternalLinkage, MangledName, Module);
     }
   }
 }
 
 llvm::Value *CodeGen::getDerefValue(llvm::Value *Val, const QualType *Ty) {
-  if (Val == nullptr || !Val->getType()->isPointerTy())
+  if (Val == nullptr || !Val->getType()->isPointerTy()) {
     return Val;
+  }
 
-  if (Ty->isPointer())
+  if (Ty->isPointer()) {
     Ty = dynamic_cast<const PointerQualType *>(Ty)->getElemType();
+  }
 
   return Builder.CreateLoad(convertType(Ty), Val);
 }
 
 const QualType *CodeGen::getDerefedQualType(const QualType *Ty) {
   assert(Ty != nullptr);
-  if (const PointerQualType *PT = dynamic_cast<const PointerQualType*>(Ty))
+  if (const PointerQualType *PT = dynamic_cast<const PointerQualType*>(Ty)) {
     return PT->getElemType();
+  }    
   return Ty;
 }
 
@@ -142,6 +161,12 @@ llvm::AllocaInst *CodeGen::createAlloca(llvm::Type *Ty, llvm::Value *ArraySize,
 void CodeGen::createMemCpy(llvm::Value *Dest, llvm::Value *Src, llvm::Type *Ty) {
   llvm::DataLayout DL = Module.getDataLayout();
   llvm::Function *Fn = Module.getFunction("memcpy");
+  if (!Fn) {
+    llvm::Type *PtrTy = llvm::PointerType::getUnqual(Context);
+    llvm::Type *Int32Ty = llvm::Type::getInt32Ty(Context);
+    llvm::FunctionType *FTy = llvm::FunctionType::get(PtrTy, {PtrTy, PtrTy, Int32Ty}, false);
+    Fn = llvm::Function::Create(FTy, llvm::Function::ExternalLinkage, "memcpy", Module);
+  }
   uint64_t SizeInBytes = DL.getTypeAllocSize(Ty);
 
   std::vector<llvm::Value *> Args = {
@@ -389,8 +414,9 @@ void CodeGen::emitItemFn(const ItemFn &N) {
 
   llvm::BasicBlock *BB = Builder.GetInsertBlock();
   if (BB->getTerminator() == nullptr) {
-    if (V)
+    if (V) {
       Builder.CreateStore(V, ReturnValue);
+    }
     Builder.CreateBr(Exit);
   }
 
@@ -553,107 +579,16 @@ llvm::Value *CodeGen::emitExprOpUnary(const ExprOpUnary &N) {
   }
 }
 
-llvm::Value *CodeGen::getAssign(const ExprNode &N) {
-  llvm::Value *RetV = nullptr;
-  switch (N.getTypeID()) {
-  default:
-    throw std::runtime_error("not expected node.");
-  case ASTNode::K_ExprOpUnary: {
-    const ExprOpUnary *TR = static_cast<const ExprOpUnary *>(&N);
-    if (!TR || TR->type != DEREFERENCE_) {
-      throw std::runtime_error("only mutable reference can be assigned");
-    }
-    RetV = emitExprNode(*TR->expr);
-  }
-  case ASTNode::K_ExprPath: {
-    auto *EP = static_cast<const ExprPath *>(&N);
-    std::string Name;
-    switch (EP->path1->type) {
-    case PathType::Identifier:
-      Name = EP->path1->identifier;
-      break;
-    case PathType::self:
-      Name = "self";
-      break;
-    case PathType::Self:
-      return nullptr;
-    }
-    RetV = AllocaAddr[Name];
-    break;
-  }
-  case ASTNode::K_ExprField: {
-    const ExprField &EF = static_cast<const ExprField&>(N);
-    const QualType *AddrQTy = EF.expr->getQualType();
-    const PointerQualType *PT = dynamic_cast<const PointerQualType*>(AddrQTy);
-    llvm::Value *Addr = emitExprNode(*EF.expr);
-    const StructQualType *ST;
-
-    if (PT != nullptr) {
-      // Value *V  = Builder.CreateLoad(convertType(AddrQTy), Addr);
-      ST = dynamic_cast<const StructQualType*>(PT->getElemType());
-      // Addr = V;
-      if (ST == nullptr) {
-        throw std::runtime_error("self is not struct type");
-      }
-
-      const std::string &FieldName = EF.identifier;
-
-      int Idx = ST->getFieldIndex(FieldName);
-      if (Idx < 0) {
-        throw std::runtime_error("field not found in struct");
-      }
-
-      std::vector<llvm::Value *> IdxList;
-      IdxList.push_back(llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), 0));
-      IdxList.push_back(llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), Idx));
-      llvm::Value *FieldPtr =
-          Builder.CreateGEP(convertType(ST), Addr, IdxList, "fieldptr");
-      return FieldPtr;
-    } else {
-      throw std::runtime_error("not pointer type for field expr");
-    }
-  }
-  case ASTNode::K_ExprIndex: {
-    auto *EI = static_cast<const ExprIndex *>(&N);
-    const ArrayQualType *QTy =
-        dynamic_cast<const ArrayQualType*>(EI->array->getQualType());
-    if (QTy == nullptr) {
-      const PointerQualType *PT =
-          dynamic_cast<const PointerQualType*>(EI->array->getQualType());
-      if (PT != nullptr) {
-        QTy = dynamic_cast<const ArrayQualType*>(PT->getElemType());
-      }
-    }
-    if (QTy == nullptr) {
-      throw std::runtime_error("not array type for array index expr");
-    }
-    llvm::Type *ArrayTy = convertType(QTy);
-    llvm::Value *BaseV = emitExprNode(*EI->array);
-    if (EI->array->getQualType()->isPointer()) {
-      BaseV = Builder.CreateLoad(convertType(EI->array->getQualType()), BaseV);
-    }
-    llvm::Value *IdxV = getValue(emitExprNode(*EI->index), EI->index->getQualType());
-    if (!BaseV || !IdxV)
-      return nullptr;
-    std::vector<llvm::Value *> IdxList;
-    IdxList.push_back(llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), 0));
-    IdxList.push_back(IdxV);
-    RetV = Builder.CreateGEP(ArrayTy, BaseV, IdxList, "indexptr");
-    break;
-  }
-  }
-  return RetV;
-}
-
 llvm::Value *CodeGen::emitExprOpBinary(const ExprOpBinary &N) {
   if (N.type == ExprOpBinaryType::AND_AND_) {
     llvm::Value *L = getValue(emitExprNode(*N.left), N.left->getQualType());
-    if (!L)
+    if (!L) {
       return nullptr;
-    if (L->getType()->isIntegerTy(32))
+    }
+    if (L->getType()->isIntegerTy(32)) {
       L = Builder.CreateICmpNE(L,
                                llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), 0));
-
+    }
     llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
     llvm::BasicBlock *LHSBB = Builder.GetInsertBlock();
     llvm::BasicBlock *RHSBB = llvm::BasicBlock::Create(Context, "and.rhs", TheFunction);
@@ -663,11 +598,13 @@ llvm::Value *CodeGen::emitExprOpBinary(const ExprOpBinary &N) {
 
     Builder.SetInsertPoint(RHSBB);
     llvm::Value *R = getValue(emitExprNode(*N.right), N.right->getQualType());
-    if (!R)
+    if (!R) {
       return nullptr;
-    if (R->getType()->isIntegerTy(32))
+    }
+    if (R->getType()->isIntegerTy(32)) {
       R = Builder.CreateICmpNE(R,
                                llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), 0));
+    }
     Builder.CreateBr(MergeBB);
     RHSBB = Builder.GetInsertBlock();
 
@@ -800,7 +737,6 @@ llvm::Value *CodeGen::emitExprOpBinary(const ExprOpBinary &N) {
 }
 
 llvm::Value *CodeGen::emitExprOpCast(const ExprOpCast &N) {
-  // TODO: more details
   llvm::Value *Val = emitExprNode(*N.expr);
   Val = getDerefValue(Val, N.expr->getQualType());
   return Builder.CreateIntCast(Val, convertType(N.getQualType()), true);
@@ -817,7 +753,6 @@ llvm::Value *CodeGen::emitExprArrayExpand(const ExprArrayExpand &N) {
     throw std::runtime_error("not array type for array expand expr");
   }
 
-  // Type *ArrayTy = convertType(QTy);
   llvm::Type *ArrayTy =
       llvm::ArrayType::get(convertType(QTy->getElemType()), N.elements.size());
 
@@ -902,7 +837,6 @@ llvm::Value *CodeGen::emitExprIndex(const ExprIndex &N) {
   std::vector<llvm::Value *> IdxList;
   IdxList.push_back(llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), 0));
   IdxList.push_back(IdxV);
-  // TODO: need checked type
   const ArrayQualType *QTy = dynamic_cast<const ArrayQualType*>(N.array->getQualType());
   if (QTy == nullptr) {
     const PointerQualType *PT =
@@ -1058,11 +992,7 @@ llvm::Value *CodeGen::emitExprLoopInfinite(const ExprLoopInfinite &N) {
   CurrentHeadBB = LoopBB;
   CurrentAfterBB = AfterBB;
 
-  // TODO: 这里的res一个是个临时的类型
   llvm::Type *Ty = convertType(N.getQualType());
-  // TODO: 这里获取表达式的类型
-  //  if (N.type)
-  //    Ty = getType(N.expr.getType());
   llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
                    TheFunction->getEntryBlock().begin());
   llvm::AllocaInst *Alloca1 = nullptr;
@@ -1080,7 +1010,6 @@ llvm::Value *CodeGen::emitExprLoopInfinite(const ExprLoopInfinite &N) {
     Builder.CreateBr(LoopBB);
 
   Builder.SetInsertPoint(AfterBB);
-  // Value *tem = Builder.CreateLoad(Ty, CurrentLoopRes, "tempload");
 
   // Restore state
   CurrentHeadBB = SavedHeadBB;
@@ -1182,14 +1111,10 @@ llvm::Value *CodeGen::emitExprContinue(const ExprContinue &N) {
 llvm::Value *CodeGen::emitExprIf(const ExprIf &N) {
   llvm::Value *CondV =
       getValue(emitExprNode(*N.condition), N.condition->getQualType());
-  // TODO: 这里的res一个是个临时的类型
   llvm::Type *Ty = nullptr;
   if (!N.getQualType()->isVoid()) {
     Ty = convertType(N.getQualType());
   }
-  // TODO: 这里获取表达式的类型
-  //  if (N.type)
-  //    Ty = getType(N.expr.getType());
   llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
   llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
                    TheFunction->getEntryBlock().begin());
@@ -1246,7 +1171,6 @@ llvm::Value *CodeGen::emitExprIf(const ExprIf &N) {
   }
 
   Builder.SetInsertPoint(MergeBB);
-  // Value* tem = Builder.CreateLoad(Ty, CurrentLoopRes, "tempload");
 
   return Alloca1;
 }

@@ -715,8 +715,8 @@ std::shared_ptr<ExprNode> Parser::parseExprInfix(std::shared_ptr<ExprNode> &&lef
   case AS:        return parseExprOpCast(std::move(left));
   case L_BRACKET: return parseExprIndex(std::move(left));
   case L_BRACE: {
-    if (dynamic_cast<ExprPath*>(left.get())) {
-      return parseExprStruct(std::shared_ptr<ExprPath>(dynamic_cast<ExprPath*>(left.get())));
+    if (auto p = std::dynamic_pointer_cast<ExprPath>(left)) {
+      return parseExprStruct(std::move(p));
     } else {
       throw std::bad_exception();
     }

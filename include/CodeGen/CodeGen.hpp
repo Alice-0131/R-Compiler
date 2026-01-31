@@ -62,11 +62,11 @@ private:
   std::unordered_map<std::string, llvm::StructType *> StructTyDef;
   std::unordered_map<std::string, llvm::Value *> AllocaAddr;
 
-  const StructQualType *CurrentImpl = nullptr;
-  ItemFn *CurrentFn = nullptr;
-  llvm::BasicBlock *CurrentHeadBB = nullptr;
-  llvm::BasicBlock *CurrentAfterBB = nullptr;
-  llvm::Value *CurrentLoopRes = nullptr;
+  const StructQualType *CurrentImpl = nullptr; // 当前正在处理的 impl 块对应的结构体类型
+  ItemFn *CurrentFn = nullptr; // 当前正在编译的函数 AST 节点。
+  llvm::BasicBlock *CurrentHeadBB = nullptr; // 当前控制流结构的“起始/条件”基本块
+  llvm::BasicBlock *CurrentAfterBB = nullptr; // 当前控制流结构的“结束/后续”基本块
+  llvm::Value *CurrentLoopRes = nullptr; // 当前循环的“返回值”存储位置
 
   llvm::Type *ImplType;
 
@@ -84,7 +84,6 @@ private:
 
   void emitItemNode(const ItemNode &N);
   llvm::Value *emitExprNode(const ExprNode &N);
-  llvm::Value *getAssign(const ExprNode &N);
   llvm::Type *emitTypeNode(const TypeNode &N);
   void emitPatternNode(const PatternNode &N);
   llvm::Value *getValue(llvm::Value *value, const QualType *Ty);

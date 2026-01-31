@@ -107,8 +107,8 @@ private:
 
 private:
   BlockCtx BCtx;
-  std::shared_ptr<Crate> &Prog;
-  SymTable &Syms;
+  std::shared_ptr<Crate> &Prog; // AST根节点
+  SymTable &Syms; // 全局符号表
 
   QualType *CurImplTy;// The structure currently being processed
   ItemFn *CurFunction = nullptr;// The function currently being processed
@@ -134,7 +134,6 @@ private:
   // self of trait has no exact type
   const FuncQualType *setFnSignature(ItemFn &N, bool isImp);
 
-  void collectConst(ItemConst &N);
   void collectStructField(ItemStruct &N);
   void collectStructMethod(ItemImpl &N);
   void collectTraitMethod(ItemTrait &N);
